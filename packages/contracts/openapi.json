@@ -1,0 +1,187 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "RuleTwin API",
+    "version": "0.1.0",
+    "description": "Phase 1 design contract. No running service or implementation exists."
+  },
+  "servers": [{"url": "http://localhost:8000", "description": "Planned local development server"}],
+  "security": [{"bearerAuth": []}],
+  "paths": {
+    "/v1/tenants/{tenant_id}/rule-versions": {
+      "post": {
+        "operationId": "createRuleVersion",
+        "parameters": [
+          {"$ref": "#/components/parameters/TenantId"},
+          {"$ref": "#/components/parameters/IdempotencyKey"},
+          {"$ref": "#/components/parameters/CorrelationId"}
+        ],
+        "requestBody": {"required": true, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/CreateRuleVersion"}}}},
+        "responses": {
+          "201": {"description": "Immutable rule version created", "headers": {"ETag": {"$ref": "#/components/headers/ETag"}}, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/RuleVersion"}}}},
+          "409": {"$ref": "#/components/responses/Conflict"},
+          "422": {"$ref": "#/components/responses/ValidationError"}
+        }
+      }
+    },
+    "/v1/rule-versions/{version_id}": {
+      "get": {
+        "operationId": "getRuleVersion",
+        "parameters": [{"$ref": "#/components/parameters/VersionId"}, {"$ref": "#/components/parameters/CorrelationId"}],
+        "responses": {
+          "200": {"description": "Tenant-authorized rule version", "headers": {"ETag": {"$ref": "#/components/headers/ETag"}}, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/RuleVersion"}}}},
+          "404": {"$ref": "#/components/responses/NotFound"}
+        }
+      }
+    },
+    "/v1/rule-versions/{version_id}/diff": {
+      "get": {
+        "operationId": "diffRuleVersion",
+        "parameters": [
+          {"$ref": "#/components/parameters/VersionId"},
+          {"name": "against_version_id", "in": "query", "required": true, "schema": {"$ref": "#/components/schemas/Uuid"}},
+          {"$ref": "#/components/parameters/CorrelationId"}
+        ],
+        "responses": {
+          "200": {"description": "Canonical rule difference", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/RuleDiff"}}}},
+          "404": {"$ref": "#/components/responses/NotFound"},
+          "422": {"$ref": "#/components/responses/ValidationError"}
+        }
+      }
+    },
+    "/v1/replay-datasets": {
+      "post": {
+        "operationId": "createReplayDataset",
+        "parameters": [{"$ref": "#/components/parameters/IdempotencyKey"}, {"$ref": "#/components/parameters/CorrelationId"}],
+        "requestBody": {"required": true, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/CreateDataset"}}}},
+        "responses": {
+          "201": {"description": "Immutable dataset manifest created", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/DatasetManifest"}}}},
+          "409": {"$ref": "#/components/responses/Conflict"},
+          "422": {"$ref": "#/components/responses/ValidationError"}
+        }
+      }
+    },
+    "/v1/simulations": {
+      "post": {
+        "operationId": "createSimulation",
+        "parameters": [{"$ref": "#/components/parameters/IdempotencyKey"}, {"$ref": "#/components/parameters/CorrelationId"}],
+        "requestBody": {"required": true, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/CreateSimulation"}}}},
+        "responses": {
+          "202": {"description": "Simulation accepted", "headers": {"Location": {"schema": {"type": "string", "format": "uri-reference"}}, "ETag": {"$ref": "#/components/headers/ETag"}}, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Simulation"}}}},
+          "409": {"$ref": "#/components/responses/Conflict"},
+          "422": {"$ref": "#/components/responses/ValidationError"}
+        }
+      }
+    },
+    "/v1/simulations/{simulation_id}": {
+      "get": {
+        "operationId": "getSimulation",
+        "parameters": [{"$ref": "#/components/parameters/SimulationId"}, {"$ref": "#/components/parameters/CorrelationId"}],
+        "responses": {
+          "200": {"description": "Current simulation state", "headers": {"ETag": {"$ref": "#/components/headers/ETag"}}, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Simulation"}}}},
+          "404": {"$ref": "#/components/responses/NotFound"}
+        }
+      }
+    },
+    "/v1/simulations/{simulation_id}/impact": {
+      "get": {
+        "operationId": "getSimulationImpact",
+        "parameters": [{"$ref": "#/components/parameters/SimulationId"}, {"$ref": "#/components/parameters/CorrelationId"}],
+        "responses": {
+          "200": {"description": "Canonical aggregate impact", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/ImpactReport"}}}},
+          "404": {"$ref": "#/components/responses/NotFound"},
+          "409": {"$ref": "#/components/responses/Conflict"}
+        }
+      }
+    },
+    "/v1/simulations/{simulation_id}/approvals": {
+      "post": {
+        "operationId": "submitSimulationApproval",
+        "parameters": [
+          {"$ref": "#/components/parameters/SimulationId"},
+          {"$ref": "#/components/parameters/IdempotencyKey"},
+          {"$ref": "#/components/parameters/CorrelationId"},
+          {"name": "If-Match", "in": "header", "required": true, "schema": {"type": "string"}}
+        ],
+        "requestBody": {"required": true, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/CreateApproval"}}}},
+        "responses": {
+          "201": {"description": "Approval bound to exact evidence", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Approval"}}}},
+          "409": {"$ref": "#/components/responses/Conflict"},
+          "422": {"$ref": "#/components/responses/ValidationError"}
+        }
+      }
+    },
+    "/v1/release-gates/evaluate": {
+      "post": {
+        "operationId": "evaluateReleaseGate",
+        "parameters": [{"$ref": "#/components/parameters/IdempotencyKey"}, {"$ref": "#/components/parameters/CorrelationId"}],
+        "requestBody": {"required": true, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/EvaluateGate"}}}},
+        "responses": {
+          "201": {"description": "Immutable fail-closed gate decision", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/ReleaseGate"}}}},
+          "409": {"$ref": "#/components/responses/Conflict"},
+          "422": {"$ref": "#/components/responses/ValidationError"}
+        }
+      }
+    },
+    "/v1/audit-events": {
+      "get": {
+        "operationId": "listAuditEvents",
+        "parameters": [
+          {"$ref": "#/components/parameters/CorrelationId"},
+          {"name": "cursor", "in": "query", "schema": {"type": "string", "maxLength": 512}},
+          {"name": "limit", "in": "query", "schema": {"type": "integer", "minimum": 1, "maximum": 200, "default": 50}}
+        ],
+        "responses": {
+          "200": {"description": "Tenant-authorized append-only audit events", "content": {"application/json": {"schema": {"type": "object", "required": ["items"], "properties": {"items": {"type": "array", "items": {"$ref": "#/components/schemas/AuditEvent"}}, "next_cursor": {"type": ["string", "null"]}}}}}}
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {"bearerAuth": {"type": "http", "scheme": "bearer", "bearerFormat": "JWT"}},
+    "parameters": {
+      "TenantId": {"name": "tenant_id", "in": "path", "required": true, "schema": {"$ref": "#/components/schemas/Uuid"}},
+      "VersionId": {"name": "version_id", "in": "path", "required": true, "schema": {"$ref": "#/components/schemas/Uuid"}},
+      "SimulationId": {"name": "simulation_id", "in": "path", "required": true, "schema": {"$ref": "#/components/schemas/Uuid"}},
+      "IdempotencyKey": {"name": "Idempotency-Key", "in": "header", "required": true, "schema": {"type": "string", "minLength": 16, "maxLength": 128}},
+      "CorrelationId": {"name": "X-Correlation-ID", "in": "header", "required": true, "schema": {"$ref": "#/components/schemas/Uuid"}}
+    },
+    "headers": {"ETag": {"description": "Opaque concurrency version", "schema": {"type": "string"}}},
+    "responses": {
+      "NotFound": {"description": "Object is absent or not authorized", "content": {"application/problem+json": {"schema": {"$ref": "#/components/schemas/Problem"}}}},
+      "Conflict": {"description": "Idempotency, dependency, state or concurrency conflict", "content": {"application/problem+json": {"schema": {"$ref": "#/components/schemas/Problem"}}}},
+      "ValidationError": {"description": "Domain or schema validation failed", "content": {"application/problem+json": {"schema": {"$ref": "#/components/schemas/Problem"}}}}
+    },
+    "schemas": {
+      "Uuid": {"type": "string", "format": "uuid"},
+      "Checksum": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+      "CreateRuleVersion": {
+        "type": "object", "additionalProperties": false,
+        "required": ["definition_id", "family", "effective_from", "timezone", "rule", "dependency_version_ids"],
+        "properties": {
+          "definition_id": {"$ref": "#/components/schemas/Uuid"},
+          "family": {"type": "string", "enum": ["rounding", "tiered_rate", "late_fee", "effective_date_eligibility", "exception_routing"]},
+          "effective_from": {"type": "string", "format": "date"},
+          "effective_until": {"type": ["string", "null"], "format": "date"},
+          "timezone": {"type": "string", "minLength": 1, "maxLength": 64},
+          "rule": {"type": "object"},
+          "dependency_version_ids": {"type": "array", "uniqueItems": true, "maxItems": 50, "items": {"$ref": "#/components/schemas/Uuid"}}
+        }
+      },
+      "RuleVersion": {"allOf": [{"$ref": "#/components/schemas/CreateRuleVersion"}, {"type": "object", "required": ["id", "tenant_id", "schema_version", "checksum", "authored_by", "created_at"], "properties": {"id": {"$ref": "#/components/schemas/Uuid"}, "tenant_id": {"$ref": "#/components/schemas/Uuid"}, "schema_version": {"type": "string"}, "checksum": {"$ref": "#/components/schemas/Checksum"}, "authored_by": {"$ref": "#/components/schemas/Uuid"}, "created_at": {"type": "string", "format": "date-time"}}}]},
+      "RuleDiff": {"type": "object", "required": ["from_version_id", "to_version_id", "changes"], "properties": {"from_version_id": {"$ref": "#/components/schemas/Uuid"}, "to_version_id": {"$ref": "#/components/schemas/Uuid"}, "changes": {"type": "array", "items": {"type": "object"}}}},
+      "CreateDataset": {"type": "object", "additionalProperties": false, "required": ["tenant_id", "seed", "generator_version", "event_schema_version", "event_count"], "properties": {"tenant_id": {"$ref": "#/components/schemas/Uuid"}, "seed": {"type": "integer", "minimum": 0}, "generator_version": {"type": "string", "minLength": 1}, "event_schema_version": {"type": "string", "minLength": 1}, "event_count": {"type": "integer", "minimum": 1, "maximum": 100000}}},
+      "DatasetManifest": {"allOf": [{"$ref": "#/components/schemas/CreateDataset"}, {"type": "object", "required": ["id", "checksum", "created_at"], "properties": {"id": {"$ref": "#/components/schemas/Uuid"}, "checksum": {"$ref": "#/components/schemas/Checksum"}, "created_at": {"type": "string", "format": "date-time"}}}]},
+      "CreateSimulation": {"type": "object", "additionalProperties": false, "required": ["tenant_id", "baseline_rule_version_id", "candidate_rule_version_id", "dataset_manifest_id", "engine_version", "risk_policy_version_id"], "properties": {"tenant_id": {"$ref": "#/components/schemas/Uuid"}, "baseline_rule_version_id": {"$ref": "#/components/schemas/Uuid"}, "candidate_rule_version_id": {"$ref": "#/components/schemas/Uuid"}, "dataset_manifest_id": {"$ref": "#/components/schemas/Uuid"}, "engine_version": {"type": "string"}, "risk_policy_version_id": {"$ref": "#/components/schemas/Uuid"}}},
+      "Simulation": {"allOf": [{"$ref": "#/components/schemas/CreateSimulation"}, {"type": "object", "required": ["id", "status", "version", "requested_by", "created_at"], "properties": {"id": {"$ref": "#/components/schemas/Uuid"}, "status": {"type": "string", "enum": ["accepted", "running", "completed", "failed", "cancelled"]}, "version": {"type": "integer", "minimum": 1}, "result_checksum": {"oneOf": [{"$ref": "#/components/schemas/Checksum"}, {"type": "null"}]}, "requested_by": {"$ref": "#/components/schemas/Uuid"}, "created_at": {"type": "string", "format": "date-time"}}}]},
+      "RiskEvaluation": {"type": "object", "required": ["policy_version_id", "decision", "reasons", "checksum"], "properties": {"policy_version_id": {"$ref": "#/components/schemas/Uuid"}, "decision": {"type": "string", "enum": ["allow", "block", "error"]}, "reasons": {"type": "array", "items": {"type": "string"}}, "checksum": {"$ref": "#/components/schemas/Checksum"}}},
+      "ImpactReport": {"type": "object", "required": ["simulation_id", "result_checksum", "risk"], "properties": {"simulation_id": {"$ref": "#/components/schemas/Uuid"}, "result_checksum": {"$ref": "#/components/schemas/Checksum"}, "risk": {"$ref": "#/components/schemas/RiskEvaluation"}}},
+      "CreateApproval": {"type": "object", "additionalProperties": false, "required": ["result_checksum", "policy_version_id", "decision"], "properties": {"result_checksum": {"$ref": "#/components/schemas/Checksum"}, "policy_version_id": {"$ref": "#/components/schemas/Uuid"}, "decision": {"type": "string", "enum": ["approve", "reject"]}, "rationale": {"type": "string", "maxLength": 2000}}},
+      "Approval": {"allOf": [{"$ref": "#/components/schemas/CreateApproval"}, {"type": "object", "required": ["id", "simulation_id", "reviewer_id", "created_at"], "properties": {"id": {"$ref": "#/components/schemas/Uuid"}, "simulation_id": {"$ref": "#/components/schemas/Uuid"}, "reviewer_id": {"$ref": "#/components/schemas/Uuid"}, "created_at": {"type": "string", "format": "date-time"}}}]},
+      "EvaluateGate": {"type": "object", "additionalProperties": false, "required": ["simulation_id", "approval_id", "result_checksum", "policy_version_id"], "properties": {"simulation_id": {"$ref": "#/components/schemas/Uuid"}, "approval_id": {"$ref": "#/components/schemas/Uuid"}, "result_checksum": {"$ref": "#/components/schemas/Checksum"}, "policy_version_id": {"$ref": "#/components/schemas/Uuid"}}},
+      "ReleaseGate": {"type": "object", "required": ["id", "tenant_id", "simulation_id", "decision", "evidence_checksum", "created_at"], "properties": {"id": {"$ref": "#/components/schemas/Uuid"}, "tenant_id": {"$ref": "#/components/schemas/Uuid"}, "simulation_id": {"$ref": "#/components/schemas/Uuid"}, "decision": {"type": "string", "enum": ["allow", "block"]}, "evidence_checksum": {"$ref": "#/components/schemas/Checksum"}, "reasons": {"type": "array", "items": {"type": "string"}}, "created_at": {"type": "string", "format": "date-time"}}},
+      "AuditEvent": {"type": "object", "required": ["id", "tenant_id", "actor_id", "action", "object_type", "object_id", "correlation_id", "created_at"], "properties": {"id": {"$ref": "#/components/schemas/Uuid"}, "tenant_id": {"$ref": "#/components/schemas/Uuid"}, "actor_id": {"$ref": "#/components/schemas/Uuid"}, "action": {"type": "string"}, "object_type": {"type": "string"}, "object_id": {"$ref": "#/components/schemas/Uuid"}, "correlation_id": {"$ref": "#/components/schemas/Uuid"}, "created_at": {"type": "string", "format": "date-time"}}},
+      "Problem": {"type": "object", "additionalProperties": false, "required": ["type", "title", "status", "code", "correlation_id"], "properties": {"type": {"type": "string", "format": "uri-reference"}, "title": {"type": "string"}, "status": {"type": "integer", "minimum": 400, "maximum": 599}, "code": {"type": "string", "pattern": "^RT_[A-Z0-9_]+$"}, "detail": {"type": "string"}, "correlation_id": {"$ref": "#/components/schemas/Uuid"}}}
+    }
+  }
+}
