@@ -35,7 +35,7 @@ jobs:
       RULETWIN_TEST_DATABASE_URL: postgresql+psycopg://postgres@localhost:5432/ruletwin_test
       RULETWIN_LOG_LEVEL: CRITICAL
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -55,7 +55,7 @@ jobs:
     name: Web quality and build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v4
         with:
           version: 10.18.0
@@ -74,7 +74,7 @@ jobs:
     name: Contracts and repository security
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - uses: actions/setup-python@v5
@@ -101,7 +101,7 @@ jobs:
       POSTGRES_APP_PASSWORD: ci-app-placeholder
       POSTGRES_TEST_PASSWORD: ci-test-placeholder
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v4
         with:
           version: 10.18.0
