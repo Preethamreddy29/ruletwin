@@ -88,6 +88,8 @@ jobs:
           python -m pip_audit
           bandit -q -r apps/api/src
       - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   containers:
     name: Compose and container evidence
@@ -128,7 +130,7 @@ jobs:
           uname -a
           lscpu
           free -h
-      - uses: aquasecurity/trivy-action@0.29.0
+      - uses: aquasecurity/trivy-action@v0.29.0
         with:
           image-ref: ruletwin-api:ci
           format: table
