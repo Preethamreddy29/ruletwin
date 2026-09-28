@@ -130,7 +130,7 @@ jobs:
           uname -a
           lscpu
           free -h
-      - uses: aquasecurity/trivy-action@v0.35.0
+      - uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: ruletwin-api:ci
           format: table
