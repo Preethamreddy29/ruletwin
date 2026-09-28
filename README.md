@@ -2,7 +2,7 @@
 
 RuleTwin is a deterministic, tenant-aware change-impact simulator for proposed business-rule changes. It replays synthetic events through baseline and candidate rule versions, compares outcomes, applies a versioned risk policy, and produces reproducible approval evidence.
 
-> **Current state:** Phase 1 architecture and contract design gate is complete locally. No API, UI, worker, database, deployment, executable test suite, or production evidence exists yet.
+> **Current state:** Phase 1 is merged. Phase 2 engineering-foundation implementation and local Docker/PostgreSQL validation pass on `codex/phase2-engineering-foundation`; formal Phase 2 closure is waiting for a clean GitHub Actions run after commit and push.
 
 ## Product boundary
 
@@ -12,7 +12,15 @@ The portfolio index and governing sources are maintained in the sibling `enterpr
 
 ## Current milestone
 
-Phase 1 defines the domain vocabulary and invariants, data model, API contract, eight architecture decisions, tenant/RBAC model, deterministic risk policy, threat-to-test mapping, and requirements traceability. The local Phase 1 exit audit passes these design criteria. Phase 2 engineering-foundation work is next, after this documentation is reviewed and merged.
+Phase 2 establishes the FastAPI service boundary, React/Vite readiness shell, PostgreSQL migrations, transaction and outbox-worker scaffolding, structured health/metrics signals, non-root containers, deterministic synthetic seed, quality tooling and CI. Product rule execution and simulation remain Phase 3 scope.
+
+Local setup and operation are documented in [`docs/operations/development.md`](docs/operations/development.md). After Docker Desktop and WSL are running:
+
+```powershell
+./scripts/dev.ps1 bootstrap
+./scripts/dev.ps1 up
+./scripts/check.ps1
+```
 
 Start with:
 
@@ -27,6 +35,8 @@ Start with:
 - [`docs/progress.md`](docs/progress.md)
 - [`docs/phase1-exit-audit.md`](docs/phase1-exit-audit.md)
 - [`docs/validation/phase1-validation.md`](docs/validation/phase1-validation.md)
+- [`docs/phase2-exit-audit.md`](docs/phase2-exit-audit.md)
+- [`docs/validation/phase2-validation.md`](docs/validation/phase2-validation.md)
 
 ## License
 

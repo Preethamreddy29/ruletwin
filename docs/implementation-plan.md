@@ -15,8 +15,9 @@ The sibling portfolio checkout used for this phase is `D:\sunny\Profile\projects
 | Phase | Status | Gate |
 |---|---|---|
 | 0 — Charter | Closed in portfolio repository | Worth building as a documented hypothesis |
-| 1 — Requirements and architecture | **Complete locally; pending Git review/merge** | Safe and feasible design |
-| 2 — Engineering foundation | Next; not started | Repeatable engineering base |
+| 1 — Requirements and architecture | Complete and merged in PR #1 | Safe and feasible design |
+| 2 — Engineering foundation | Implementation and local validation complete; clean CI evidence pending | Repeatable engineering base |
+| 3 — First vertical slice | Deferred until the Phase 2 gate passes | Core workflow is real |
 
 ## Phase 1 deliverables
 
@@ -40,3 +41,20 @@ Phase 1 closes only when:
 5. The signature workflow is traceable from user action through API, domain, storage, worker, policy, approval, gate, and audit.
 
 No runtime code, dependency installation, CI claims, measurements, or production-readiness claims belong to Phase 1. The evidence and decision are recorded in [`phase1-exit-audit.md`](phase1-exit-audit.md).
+
+## Phase 2 deliverables
+
+- Repository contribution, security, ownership and pull-request governance.
+- Python 3.12/FastAPI service foundation with validated fail-closed configuration.
+- React/TypeScript/Vite readiness shell for a synthetic development identity.
+- PostgreSQL 16 migration baseline, application/test roles and deterministic seed.
+- Transaction boundary and PostgreSQL outbox lease-worker skeleton.
+- Liveness, readiness, version, problem-details, correlation/trace and metrics contracts.
+- Non-root read-only API, worker and web containers plus Compose profiles.
+- Ruff, mypy, pytest, ESLint, Prettier, Vitest and coverage gates.
+- GitHub CI for unit, integration, migration, contract, dependency, secret and container checks.
+- Development and Phase 2 operations runbooks.
+
+## Phase 2 exit gate
+
+Phase 2 closes only when one command starts all core services, one command runs the checks, CI succeeds from a clean runner, migrations are verified against PostgreSQL, and health/telemetry are visible. All locally executable evidence now passes; formal closure is waiting only for the clean GitHub Actions run after commit and push. Current classification is recorded in [`phase2-exit-audit.md`](phase2-exit-audit.md).

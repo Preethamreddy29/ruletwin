@@ -1,0 +1,83 @@
+[build-system]
+requires = ["setuptools>=75", "wheel>=0.44"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ruletwin"
+version = "0.1.0.dev0"
+description = "Deterministic, tenant-aware business-rule change-impact simulator"
+readme = "README.md"
+requires-python = ">=3.12,<3.14"
+license = {text = "Apache-2.0"}
+authors = [{name = "RuleTwin contributors"}]
+dependencies = [
+  "alembic>=1.14,<2",
+  "fastapi>=0.115,<1",
+  "prometheus-client>=0.21,<1",
+  "psycopg[binary]>=3.2,<4",
+  "pydantic-settings>=2.7,<3",
+  "python-json-logger>=3.2,<4",
+  "sqlalchemy[asyncio]>=2.0.36,<3",
+  "uvicorn[standard]>=0.34,<1",
+]
+
+[project.optional-dependencies]
+dev = [
+  "httpx>=0.28,<1",
+  "mypy>=1.14,<2",
+  "pytest>=8.3,<9",
+  "pytest-asyncio>=0.25,<1",
+  "pytest-cov>=6,<7",
+  "ruff>=0.9,<1",
+  "types-python-dateutil>=2.9,<3",
+]
+
+[project.scripts]
+ruletwin-seed = "ruletwin.seed:main"
+ruletwin-worker = "ruletwin.worker.main:main"
+
+[tool.setuptools]
+package-dir = {"" = "apps/api/src"}
+
+[tool.setuptools.packages.find]
+where = ["apps/api/src"]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+src = ["apps/api/src", "apps/api/tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "ASYNC", "S", "RUF"]
+ignore = ["S101"]
+
+[tool.ruff.lint.per-file-ignores]
+"apps/api/tests/**/*.py" = ["S101", "S105", "S106"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+packages = ["ruletwin"]
+mypy_path = "apps/api/src"
+plugins = ["pydantic.mypy"]
+
+[tool.pytest.ini_options]
+addopts = "-ra --strict-markers --cov=ruletwin --cov-report=term-missing --cov-fail-under=80"
+testpaths = ["apps/api/tests"]
+asyncio_mode = "auto"
+markers = ["integration: requires a running PostgreSQL database"]
+
+[tool.coverage.run]
+branch = true
+source = ["ruletwin"]
+omit = [
+  "*/api/main.py",
+  "*/db/models.py",
+  "*/seed.py",
+  "*/worker/main.py",
+]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
+exclude_also = ["if TYPE_CHECKING:", "if __name__ == .__main__.:"]
