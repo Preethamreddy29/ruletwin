@@ -1,0 +1,142 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: Backend, migrations and integration
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16.6-alpine
+        env:
+          POSTGRES_DB: ruletwin_test
+          POSTGRES_USER: postgres
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres -d ruletwin_test"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 12
+    env:
+      RULETWIN_ENVIRONMENT: test
+      RULETWIN_DATABASE_URL: postgresql+psycopg://postgres@localhost:5432/ruletwin_test
+      RULETWIN_TEST_DATABASE_URL: postgresql+psycopg://postgres@localhost:5432/ruletwin_test
+      RULETWIN_LOG_LEVEL: CRITICAL
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: python -m pip install --upgrade pip
+      - run: python -m pip install -e ".[dev]"
+      - name: Create migration grant role
+        run: docker exec ${{ job.services.postgres.id }} psql -U postgres -d ruletwin_test -c "CREATE ROLE ruletwin_app NOLOGIN;"
+      - run: python -m ruff format --check .
+      - run: python -m ruff check .
+      - run: python -m mypy
+      - name: Verify reversible clean migration cycle
+        run: python scripts/test_migrations.py
+      - run: python -m pytest
+
+  web:
+    name: Web quality and build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.18.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22.20.0"
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm format:check
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm build
+
+  contracts-and-security:
+    name: Contracts and repository security
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python scripts/validate_openapi.py
+      - run: python scripts/secret_scan.py .
+      - name: Python dependency and static security audit
+        run: |
+          python -m pip install -e . pip-audit bandit
+          python -m pip_audit
+          bandit -q -r apps/api/src
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  containers:
+    name: Compose and container evidence
+    runs-on: ubuntu-latest
+    env:
+      POSTGRES_DB: ruletwin
+      POSTGRES_USER: ruletwin_admin
+      POSTGRES_PASSWORD: ci-admin-placeholder
+      POSTGRES_APP_PASSWORD: ci-app-placeholder
+      POSTGRES_TEST_PASSWORD: ci-test-placeholder
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.18.0
+      - run: docker compose --profile full config --quiet
+      - run: docker build --file apps/api/Dockerfile --tag ruletwin-api:ci .
+      - run: docker build --file apps/web/Dockerfile --tag ruletwin-web:ci .
+      - name: Assert non-root images
+        run: |
+          test "$(docker image inspect --format '{{.Config.User}}' ruletwin-api:ci)" = "10001:10001"
+          test "$(docker image inspect --format '{{.Config.User}}' ruletwin-web:ci)" = "101:101"
+      - name: Start and smoke-test core services
+        run: |
+          started_at=$(date +%s)
+          docker compose --profile core up --build --detach
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent http://localhost:8000/health/ready >/dev/null; then
+              break
+            fi
+            sleep 2
+          done
+          curl --fail --silent http://localhost:8000/health/live >/dev/null
+          curl --fail --silent http://localhost:8000/health/ready >/dev/null
+          curl --fail --silent http://localhost:8000/metrics >/dev/null
+          curl --fail --silent http://localhost:8080/ >/dev/null
+          echo "clean_runner_startup_seconds=$(($(date +%s) - started_at))"
+          uname -a
+          lscpu
+          free -h
+      - uses: aquasecurity/trivy-action@v0.35.0
+        with:
+          image-ref: ruletwin-api:ci
+          format: table
+          exit-code: "1"
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+      - name: Stop test services
+        if: always()
+        run: docker compose --profile full down --volumes

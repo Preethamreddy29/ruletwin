@@ -1,37 +1,47 @@
 # Progress and Status
 
 **As of:** 2026-09-27
-**Branch:** `codex/phase1-design-foundation` (local documentation work not yet committed)
-**Milestone:** RuleTwin Phase 1 — requirements and architecture
-**Overall:** Phase 1 design gate passes locally; review/commit/PR/merge remain. No runtime exists.
+**Branch:** `codex/phase2-engineering-foundation` (local work not committed)
+**Milestone:** RuleTwin Phase 2 — engineering foundation
+**Overall:** Phase 2 implementation and local validation are complete. Formal closure requires a successful clean GitHub Actions run after commit and push.
 
 ## Established
 
-- Separate RuleTwin repository detected at `D:\sunny\Profile\projects\ruletwin` with correct GitHub remote.
-- Apache-2.0 license selected.
-- Portfolio index remains separate at `D:\sunny\Profile\projects\enterprise-rule-intelligence`.
-- Phase 1 source precedence and exit gate recorded.
-- Initial domain vocabulary, invariants, money/time semantics, ERD/lifecycle, tenant/RBAC model, threat mapping and risk-policy model drafted.
-- Eight required ADRs drafted with explicit alternatives and revisit triggers.
-- Initial OpenAPI 3.1 contract and UI-to-data signature workflow trace drafted.
-- Initial API examples and authorization/tenant-isolation matrix drafted.
-- OpenAPI moved to JSON and structurally validated without installing dependencies.
-- Schema constraints, indexes and retention reviewed; conservative risk-policy v0.1 rules accepted.
-- Threats mapped to explicit planned test families; all eight ADRs accepted for Phase 2 implementation.
-- Formal Phase 1 exit audit completed with every runbook criterion satisfied by design evidence.
-- Authoritative functional requirements, NFR baseline and system-context boundaries added to RuleTwin.
-- Final contract, traceability, link, consistency and formatting checks recorded in `docs/validation/phase1-validation.md`.
+- Phase 1 merged to `main` in PR #1.
+- Python 3.12/FastAPI API skeleton with fail-closed settings, problem details, correlation/trace headers, liveness, readiness, version and Prometheus metrics.
+- PostgreSQL migration baseline for tenants, users, roles and outbox events, plus deterministic synthetic seeding.
+- Explicit unit-of-work boundary and concurrency-safe `FOR UPDATE SKIP LOCKED` worker claim.
+- React/TypeScript/Vite web shell showing API/database readiness and synthetic development identity.
+- PostgreSQL, migration, API, worker, web and optional Prometheus Compose services.
+- Non-root, read-only API/worker/web container configuration.
+- Ruff, mypy, pytest, ESLint, Prettier, Vitest, coverage, OpenAPI and secret checks.
+- GitHub Actions jobs for PostgreSQL migrations/integration, web build, contracts/security and containers.
+- Development and operations runbooks.
+
+## Verified locally
+
+- `./scripts/dev.ps1 up` started all core services from a stopped state in 26.14 seconds with warm Docker cache and retained volumes.
+- `./scripts/check.ps1 -Integration` completed the full local validation in one command.
+- Reversible migration and drift checks passed against isolated `ruletwin_test`.
+- All 20 Python tests passed against live PostgreSQL with 95.81% covered scope.
+- All 3 web component tests passed with 100% statements/lines/functions and 95.23% branches; lint, type check and production build passed.
+- API, worker and web images built; runtime users are non-root and root filesystems are read-only.
+- Liveness, readiness, version, metrics, web, deterministic seed and database revision smoke checks passed.
+- Prometheus successfully scraped the API and reported `up=1`.
+- OpenAPI validation resolved all 111 local references across 10 operations; repository secret scan passed.
 
 ## Evidence limits
 
-- No dependencies were installed.
-- No API, UI, worker, database, migration, CI workflow, deployment or test was created.
-- No runtime, executable security control, performance measurement, user research or production evidence is claimed.
-- OpenAPI evidence is JSON parsing plus repository-specific structural/reference validation; a dedicated linter remains a Phase 2 CI task.
+- GitHub CI is authored but cannot be claimed successful until this branch is committed, pushed and the workflow runs.
+- Dependency, static-security and container-vulnerability scan results remain clean-runner evidence.
+- The 26.14-second startup measurement is warm-cache local evidence, not a clean-clone benchmark.
+- No rule interpreter, simulation workflow, real authorization enforcement, product approval or release gate exists; those remain Phase 3 or later work.
 - DecisionTrace and BoundaryOps remain deferred.
 
 ## Next work
 
-1. Review the local Phase 1 diff and decide whether to commit/push/open a PR.
-2. After merge, begin Phase 2 with repository governance, CI/tooling, migrations and the narrow engineering skeleton.
-3. Do not claim any planned control or test as implemented until Phase 2+ evidence exists.
+1. Review and commit the Phase 2 changes on `codex/phase2-engineering-foundation`.
+2. Push the branch and open the Phase 2 pull request.
+3. Require every GitHub Actions job to pass; fix and revalidate any failure.
+4. Merge the approved PR and record the merge/CI links as final Phase 2 evidence.
+5. Begin Phase 3 only after that formal closure.
