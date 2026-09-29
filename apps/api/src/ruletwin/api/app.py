@@ -11,6 +11,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from ruletwin.api.middleware import RequestContextMiddleware
 from ruletwin.api.problems import ProblemError, problem_response
+from ruletwin.api.vertical_slice import router as vertical_slice_router
 from ruletwin.config import Settings
 from ruletwin.db.database import Database
 from ruletwin.logging import configure_logging
@@ -43,7 +44,13 @@ def create_app(settings: Settings, readiness_probe: ReadinessProbe | None = None
         allow_origins=settings.parsed_cors_origins,
         allow_credentials=False,
         allow_methods=["GET", "POST", "OPTIONS"],
-        allow_headers=["Content-Type", "Idempotency-Key", "X-Correlation-ID"],
+        allow_headers=[
+            "Content-Type",
+            "Idempotency-Key",
+            "If-Match",
+            "X-Actor-ID",
+            "X-Correlation-ID",
+        ],
     )
 
     @app.exception_handler(ProblemError)
@@ -115,5 +122,7 @@ def create_app(settings: Settings, readiness_probe: ReadinessProbe | None = None
             "roles": ["author", "reviewer"],
             "synthetic": True,
         }
+
+    app.include_router(vertical_slice_router)
 
     return app

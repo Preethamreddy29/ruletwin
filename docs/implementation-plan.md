@@ -16,8 +16,8 @@ The sibling portfolio checkout used for this phase is `D:\sunny\Profile\projects
 |---|---|---|
 | 0 — Charter | Closed in portfolio repository | Worth building as a documented hypothesis |
 | 1 — Requirements and architecture | Complete and merged in PR #1 | Safe and feasible design |
-| 2 — Engineering foundation | Implementation and local validation complete; clean CI evidence pending | Repeatable engineering base |
-| 3 — First vertical slice | Deferred until the Phase 2 gate passes | Core workflow is real |
+| 2 — Engineering foundation | Merged at `ce437aae` | Repeatable engineering base |
+| 3 — First vertical slice | Implementation and local validation complete; clean CI evidence pending | Core workflow is real |
 
 ## Phase 1 deliverables
 
@@ -58,3 +58,16 @@ No runtime code, dependency installation, CI claims, measurements, or production
 ## Phase 2 exit gate
 
 Phase 2 closes only when one command starts all core services, one command runs the checks, CI succeeds from a clean runner, migrations are verified against PostgreSQL, and health/telemetry are visible. All locally executable evidence now passes; formal closure is waiting only for the clean GitHub Actions run after commit and push. Current classification is recorded in [`phase2-exit-audit.md`](phase2-exit-audit.md).
+
+## Phase 3 deliverables and gate
+
+- Immutable canonical rounding-rule versions and versioned 100-event scenario pack.
+- Integer-minor-unit deterministic interpreter, comparator, impact checksum and threshold policy.
+- Transactional idempotent simulation/outbox acceptance and lease-recoverable worker execution.
+- Checksum/policy/version-bound approval with incomplete, stale and self-approval rejection.
+- Append-only transition audit and immutable allow/block release gate.
+- Guided React workflow and Chromium validation of both risk outcomes.
+
+Phase 3 passes locally when the migration drift gate, full checks, crash recovery integration suite,
+live Compose workflow, and Playwright allow/block paths pass. Clean-runner CI after the user's manual
+commit/push remains external evidence; see [`phase3-exit-audit.md`](phase3-exit-audit.md).

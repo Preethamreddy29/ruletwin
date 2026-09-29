@@ -1,10 +1,11 @@
 {
   "name": "ruletwin-workspace",
-  "version": "0.1.0-dev",
+  "version": "0.2.0-alpha-slice",
   "private": true,
   "packageManager": "pnpm@10.18.0",
   "scripts": {
     "build": "pnpm --filter @ruletwin/web build",
+    "e2e": "pnpm --filter @ruletwin/web e2e",
     "format": "pnpm --filter @ruletwin/web format",
     "format:check": "pnpm --filter @ruletwin/web format:check",
     "lint": "pnpm --filter @ruletwin/web lint",

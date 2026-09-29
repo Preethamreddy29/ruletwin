@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
     cors_origins: str = "http://localhost:5173,http://localhost:8080"
     service_name: str = "ruletwin-api"
-    version: str = "0.1.0-dev-foundation"
+    version: str = "0.2.0-alpha-slice"
     synthetic_user_id: str = "4c542107-b2c6-5f9f-9bb8-832efd9b3dc2"
     synthetic_user_email: str = "analyst@novabill.example"
     readiness_timeout_seconds: float = Field(default=2.0, gt=0, le=10)

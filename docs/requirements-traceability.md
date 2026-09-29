@@ -1,22 +1,20 @@
-# Phase 1 Requirements Traceability
+# Requirements Traceability
 
-`Planned` means no implementation or passing test exists.
+The authoritative requirements remain in [`product/requirements.md`](product/requirements.md) and [`architecture/nfrs.md`](architecture/nfrs.md). “Slice” means the Phase 3 one-tenant rounding scope is implemented; broader v1 coverage remains later-phase work.
 
-The authoritative functional requirements and NFR identifiers are defined in [`product/requirements.md`](product/requirements.md) and [`architecture/nfrs.md`](architecture/nfrs.md).
-
-| Requirement | Design artifact | Planned verification | Status |
+| Requirement | Implementation evidence | Verification | Status |
 |---|---|---|---|
-| Immutable tenant-scoped rule versions | `domain-model.md`, `data/data-model.md`, `data/schema-review.md` | Schema, immutability, overlap and tenant tests | Phase 1 design complete; not implemented |
-| Deterministic replay tuple | `domain-model.md`, ADR-005 | Repeated canonical checksum across restart | Phase 1 design complete; not implemented |
-| Baseline/candidate comparison dimensions | `domain-model.md`, `../packages/contracts/openapi.json` | Golden amount/state/error/event cases | Phase 1 design complete; tests deferred |
-| Versioned fail-closed risk policy | `risk-policy.md`, ADR-007 | Dangerous/safe/missing/invalid policy corpus | Phase 1 policy complete; not implemented |
-| Separation of duties and tenant isolation | `security/tenant-rbac.md`, `security/authorization-matrix.md`, ADR-003/008 | Complete role/action/object/path matrix | Phase 1 matrix complete; tests deferred |
-| Durable asynchronous simulation | ADR-002, data model, signature workflow | Crash-point/outbox/duplicate-delivery tests | Phase 1 design complete; not implemented |
-| Stable versioned API behavior | `../packages/contracts/openapi.json`, `api/examples.md` | JSON/OpenAPI structure/reference validation and contract examples | Phase 1 contract complete and structurally validated |
-| High threats mapped to controls/tests | `security/threat-model.md`, `security/threat-to-test.md` | Threat review and later negative tests | Phase 1 mapping reviewed; tests deferred |
-| Eight required architecture decisions | `decisions/ADR-001` through `ADR-008` | Review status and revisit triggers | Eight accepted ADRs |
-| Signature workflow UI-to-data traceability | `architecture/signature-workflow.md` | Walkthrough of every boundary and stored tuple | Phase 1 trace reviewed |
+| Immutable tenant-scoped rule versions | `domain/canonical.py`, `domain/rounding.py`, migration `0002`, rule API | Canonical order/checksum unit test; migration constraints | Phase 3 slice complete |
+| Deterministic replay tuple | `domain/datasets.py`, `domain/simulation.py`, seeded scenario pack | Repeated dataset/result checksum test; integration replay | Phase 3 slice complete |
+| Baseline/candidate comparison | Worker application service, relational outcomes/impact | Rounding boundary/property tests; Playwright impact view | Financial Phase 3 dimension complete |
+| Versioned fail-closed risk policy | Seeded immutable policy and pure evaluator | Allow/block/error unit test; Playwright both outcomes | Phase 3 slice complete |
+| Separation of duties | Approval service validates author, checksum, policy and ETag | Incomplete, stale/substituted and self-approval integration cases | Phase 3 slice complete; full RBAC Phase 4 |
+| Durable asynchronous simulation | Transactional simulation/outbox plus lease worker | Duplicate request, crash-after-claim and post-result redelivery | Phase 3 slice complete |
+| Stable versioned API behavior | `packages/contracts/openapi.json`, problem responses and ETags | OpenAPI reference validation; live UI/API path | Phase 3 operations implemented |
+| Protected mutation audit | Append-only `audit_events`; application role cannot update/delete | Migration grant/revoke and integration/live workflow | Phase 3 transitions complete |
+| Signature workflow UI-to-data | `App.tsx`, API/application/domain/worker/database path | Chromium allow/block critical flows | Phase 3 complete |
+| High threats and full tenant isolation | Phase 1 threat/control plans | Full negative authorization matrix | Deferred to Phase 4/5 |
 
-## Gate status
+## Current gate
 
-Phase 1 **passes locally as a design gate**. See [`phase1-exit-audit.md`](phase1-exit-audit.md). All executable controls and tests remain future evidence and must not be represented as implemented.
+Phase 3 passes all locally executable evidence. See [`phase3-exit-audit.md`](phase3-exit-audit.md) and [`validation/phase3-validation.md`](validation/phase3-validation.md). Clean-runner GitHub Actions remains pending the user's manual commit and push.
