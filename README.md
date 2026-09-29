@@ -2,7 +2,7 @@
 
 RuleTwin is a deterministic, tenant-aware change-impact simulator for proposed business-rule changes. It replays synthetic events through baseline and candidate rule versions, compares outcomes, applies a versioned risk policy, and produces reproducible approval evidence.
 
-> **Current state:** Phase 1 is merged. Phase 2 engineering-foundation implementation and local Docker/PostgreSQL validation pass on `codex/phase2-engineering-foundation`; formal Phase 2 closure is waiting for a clean GitHub Actions run after commit and push.
+> **Current state:** Phase 2 is merged. Phase 3 implements and locally validates the first deterministic rounding-rule vertical slice on `codex/phase3-first-vertical-slice`; clean-runner CI remains manual post-push evidence.
 
 ## Product boundary
 
@@ -12,7 +12,7 @@ The portfolio index and governing sources are maintained in the sibling `enterpr
 
 ## Current milestone
 
-Phase 2 establishes the FastAPI service boundary, React/Vite readiness shell, PostgreSQL migrations, transaction and outbox-worker scaffolding, structured health/metrics signals, non-root containers, deterministic synthetic seed, quality tooling and CI. Product rule execution and simulation remain Phase 3 scope.
+Phase 3 provides one complete NovaBill Sandbox workflow: propose an immutable rounding rule, replay a versioned 100-event synthetic dataset against baseline and candidate rules, inspect deterministic financial impact and fail-closed risk, then bind a separate approver and release gate to the exact result checksum. PostgreSQL leases recover claimed work, duplicate requests are idempotent, protected transitions are audited, and Playwright verifies both allow and block paths.
 
 Local setup and operation are documented in [`docs/operations/development.md`](docs/operations/development.md). After Docker Desktop and WSL are running:
 
@@ -37,6 +37,8 @@ Start with:
 - [`docs/validation/phase1-validation.md`](docs/validation/phase1-validation.md)
 - [`docs/phase2-exit-audit.md`](docs/phase2-exit-audit.md)
 - [`docs/validation/phase2-validation.md`](docs/validation/phase2-validation.md)
+- [`docs/phase3-exit-audit.md`](docs/phase3-exit-audit.md)
+- [`docs/validation/phase3-validation.md`](docs/validation/phase3-validation.md)
 
 ## License
 

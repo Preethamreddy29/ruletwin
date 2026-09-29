@@ -70,6 +70,32 @@ jobs:
       - run: pnpm test
       - run: pnpm build
 
+  end-to-end:
+    name: Playwright critical flow
+    runs-on: ubuntu-latest
+    env:
+      POSTGRES_DB: ruletwin
+      POSTGRES_USER: ruletwin_admin
+      POSTGRES_PASSWORD: ci-admin-placeholder
+      POSTGRES_APP_PASSWORD: ci-app-placeholder
+      POSTGRES_TEST_PASSWORD: ci-test-placeholder
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.18.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22.20.0"
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @ruletwin/web exec playwright install --with-deps chromium
+      - run: docker compose --profile core up --build --detach
+      - run: pnpm e2e
+      - name: Stop test services
+        if: always()
+        run: docker compose --profile core down --volumes
+
   contracts-and-security:
     name: Contracts and repository security
     runs-on: ubuntu-latest

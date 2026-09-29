@@ -3,6 +3,9 @@ import logging
 import os
 import socket
 
+from sqlalchemy import text
+
+from ruletwin.application.vertical_slice import process_simulation_event
 from ruletwin.config import get_settings
 from ruletwin.db.database import Database
 from ruletwin.logging import configure_logging
@@ -33,8 +36,35 @@ async def run() -> None:
                 "outbox_event_claimed",
                 extra={"request_id": str(event.id), "trace_id": str(event.id)},
             )
-            # Phase 2 proves safe claiming only. Product handlers begin in Phase 3.
-            await asyncio.sleep(0)
+            try:
+                async with database.session() as session, session.begin():
+                    outcome = await process_simulation_event(session, event, worker_id=worker_id)
+                LOGGER.info(
+                    "outbox_event_processed",
+                    extra={"request_id": str(event.id), "trace_id": str(event.id)},
+                )
+                if outcome == "failed":
+                    LOGGER.error(
+                        "outbox_event_unsupported",
+                        extra={"request_id": str(event.id), "trace_id": str(event.id)},
+                    )
+            except Exception as exc:
+                LOGGER.exception(
+                    "outbox_event_processing_failed",
+                    extra={"request_id": str(event.id), "trace_id": str(event.id)},
+                )
+                async with database.session() as session, session.begin():
+                    await session.execute(
+                        text(
+                            """
+                            UPDATE outbox_events
+                            SET leased_until=NULL, lease_owner=NULL, last_error=:error,
+                                available_at=now() + interval '2 seconds'
+                            WHERE id=:id AND status='pending'
+                            """
+                        ),
+                        {"id": event.id, "error": str(exc)[:1000]},
+                    )
     finally:
         await database.dispose()
 

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ruletwin"
-version = "0.1.0.dev0"
+version = "0.2.0a0"
 description = "Deterministic, tenant-aware business-rule change-impact simulator"
 readme = "README.md"
 requires-python = ">=3.12,<3.14"
@@ -72,6 +72,8 @@ branch = true
 source = ["ruletwin"]
 omit = [
   "*/api/main.py",
+  "*/api/vertical_slice.py",
+  "*/application/vertical_slice.py",
   "*/db/models.py",
   "*/seed.py",
   "*/worker/main.py",

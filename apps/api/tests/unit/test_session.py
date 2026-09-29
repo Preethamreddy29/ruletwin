@@ -7,8 +7,10 @@ from ruletwin.config import Settings
 async def test_development_session_is_explicitly_synthetic(ready_client: AsyncClient) -> None:
     response = await ready_client.get("/v1/dev/session")
     assert response.status_code == 200
-    assert response.json()["synthetic"] is True
-    assert response.json()["tenant"]["slug"] == "novabill-sandbox"
+    session = response.json()
+    assert session["synthetic"] is True
+    assert session["tenant"]["slug"] == "novabill-sandbox"
+    assert session["roles"] == ["author", "reviewer"]
 
 
 async def test_development_session_is_hidden_outside_dev() -> None:
