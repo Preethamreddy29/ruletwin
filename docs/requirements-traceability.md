@@ -17,4 +17,4 @@ The authoritative requirements remain in [`product/requirements.md`](product/req
 
 ## Current gate
 
-Phase 3 passes all locally executable evidence. See [`phase3-exit-audit.md`](phase3-exit-audit.md) and [`validation/phase3-validation.md`](validation/phase3-validation.md). Clean-runner GitHub Actions remains pending the user's manual commit and push.
+Phase 3 passes local and clean-runner evidence. See [`phase3-exit-audit.md`](phase3-exit-audit.md) and [`validation/phase3-validation.md`](validation/phase3-validation.md). All five GitHub Actions pull-request jobs pass at hardening commit `b498c48`.

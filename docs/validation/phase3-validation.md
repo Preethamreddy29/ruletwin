@@ -31,6 +31,6 @@
 - Clean-reset workflow: only the two labeled RuleTwin volumes were removed; PostgreSQL/API became healthy and the seed restored exactly 100 events and one baseline rule.
 - Post-Playwright persistence: 2 completed simulations, 2 impact records, 2 approvals, one allow gate, one block gate, 14 audit events and zero unprocessed outbox events.
 
-## External evidence still pending
+## Clean-runner evidence
 
-The pull-request workflow has run once: backend, web, Playwright and container jobs passed, while the combined contracts/security job exposed a Bandit finding for a production assertion. The assertion is replaced by explicit fail-closed validation in the current local correction. Clean-runner evidence remains pending until the user commits, pushes and obtains a fully successful rerun.
+The pull-request workflow rerun for hardening commit `b498c48` completed successfully on 2026-10-21. All five jobs passed: backend/migrations/integration, web quality/build, contracts/repository security, Compose/container evidence and the Playwright critical flow. The earlier Bandit finding is closed by explicit fail-closed validation and its malformed-output regression test.

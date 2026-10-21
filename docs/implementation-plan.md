@@ -17,7 +17,7 @@ The sibling portfolio checkout used for this phase is `D:\sunny\Profile\projects
 | 0 — Charter | Closed in portfolio repository | Worth building as a documented hypothesis |
 | 1 — Requirements and architecture | Complete and merged in PR #1 | Safe and feasible design |
 | 2 — Engineering foundation | Merged at `ce437aae` | Repeatable engineering base |
-| 3 — First vertical slice | Implementation and local validation complete; clean CI evidence pending | Core workflow is real |
+| 3 — First vertical slice | Implementation, local validation and clean CI evidence complete | Core workflow is real |
 
 ## Phase 1 deliverables
 

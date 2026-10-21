@@ -2,7 +2,7 @@
 
 RuleTwin is a deterministic, tenant-aware change-impact simulator for proposed business-rule changes. It replays synthetic events through baseline and candidate rule versions, compares outcomes, applies a versioned risk policy, and produces reproducible approval evidence.
 
-> **Current state:** Phase 2 is merged. Phase 3 commit `22828fd` is pushed on `codex/phase3-first-vertical-slice` and implements the first deterministic rounding-rule vertical slice. Local validation passes; clean-runner CI must pass again after the current demo-readiness correction is committed and pushed.
+> **Current state:** Phase 2 is merged. Phase 3 is implemented on `codex/phase3-first-vertical-slice`; local validation and the clean-runner pull-request workflow pass at hardening commit `b498c48`.
 
 ## Product boundary
 

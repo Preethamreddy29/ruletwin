@@ -2,11 +2,11 @@
 
 **As of:** 2026-10-21
 
-**Branch:** `codex/phase3-first-vertical-slice` (`22828fd` pushed; current demo-readiness corrections are local pending the user's manual Git operations)
+**Branch:** `codex/phase3-first-vertical-slice` (hardening commit `b498c48` pushed)
 
 **Milestone:** RuleTwin Phase 3 — first vertical slice
 
-**Overall:** Phase 3 implementation and all locally executable exit evidence pass. A prior clean-runner pull-request run passed four of five jobs and exposed a Bandit assertion finding; the fix is included in the current local corrections, so clean-runner confirmation remains pending a user-triggered rerun.
+**Overall:** Phase 3 implementation and exit evidence pass. The production assertion identified by the first clean-runner attempt was replaced by explicit fail-closed validation; the rerun succeeded across all five pull-request jobs.
 
 ## Implemented
 
@@ -31,7 +31,7 @@
 
 ## Evidence limits and next work
 
-- GitHub Actions cannot be claimed as passing until the user commits and pushes the current correction and the pull-request workflow reruns successfully.
+- GitHub Actions clean-runner evidence passes at hardening commit `b498c48` across backend/integration, web/build, contracts/security, Compose and Playwright jobs.
 - Phase 3 uses explicit fixed development actor IDs; authenticated multi-tenant RBAC is Phase 4.
 - Phase 3 stores bounded 100-event outcomes relationally; artifact offload/retention expansion is later scope.
 - Full five-family rules, dependency graph, multiple tenants, richer impact dimensions and auditor reproduction UI remain Phase 4.
