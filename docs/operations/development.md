@@ -73,3 +73,13 @@ CI supplies its own disposable PostgreSQL service. If `RULETWIN_TEST_DATABASE_UR
 ```
 
 Named volumes are retained. Deliberate volume deletion is a separate destructive action and is not part of normal shutdown.
+
+## Reset the synthetic demo
+
+For a deliberately clean demonstration state, remove only RuleTwin's Compose-managed local volumes and recreate the core stack:
+
+```powershell
+./scripts/dev.ps1 reset
+```
+
+The command reruns migrations and the deterministic seed automatically. It permanently removes prior local RuleTwin evidence, so use normal `up` when that evidence should be retained. No manual database edits are required.

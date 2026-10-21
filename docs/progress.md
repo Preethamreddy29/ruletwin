@@ -1,12 +1,12 @@
 # Progress and Status
 
-**As of:** 2026-09-29
+**As of:** 2026-10-21
 
-**Branch:** `codex/phase3-first-vertical-slice` (local changes, not committed)
+**Branch:** `codex/phase3-first-vertical-slice` (`22828fd` pushed; current demo-readiness corrections are local pending the user's manual Git operations)
 
 **Milestone:** RuleTwin Phase 3 — first vertical slice
 
-**Overall:** Phase 3 implementation and all locally executable exit evidence pass. Clean-runner CI remains pending until the user commits and pushes.
+**Overall:** Phase 3 implementation and all locally executable exit evidence pass. A prior clean-runner pull-request run passed four of five jobs and exposed a Bandit assertion finding; the fix is included in the current local corrections, so clean-runner confirmation remains pending a user-triggered rerun.
 
 ## Implemented
 
@@ -18,18 +18,20 @@
 - Append-only audit records for rule, dataset, simulation, approval and gate mutations/state transitions.
 - Guided responsive UI for propose, dataset selection, polling, impact review and decision.
 - Playwright Chromium coverage for both allow and block critical paths.
+- Predictable `dev.ps1 reset` workflow recreates local volumes, migrations and deterministic seed without manual database edits; repository attributes preserve executable LF line endings on Windows.
 
 ## Verified locally
 
-- `./scripts/check.ps1 -Integration`: formatting, lint, mypy, OpenAPI, secret scan, reversible migrations, zero schema drift, 39 Python tests, 4 web tests, type check and production build all passed.
-- Python measured scope: 92.76%; web: 89.87% statements, 89.47% branches, 93.75% functions and 91.66% lines.
+- `./scripts/check.ps1 -Integration`: formatting, lint, mypy, OpenAPI, secret scan, reversible migrations, zero schema drift, 40 Python tests, 4 web tests, type check and production build all passed.
+- Python measured scope: 92.88%; web: 89.87% statements, 89.47% branches, 93.75% functions and 91.66% lines.
 - Worker recovery suite passes for crash after claim and redelivery after committed result; duplicate simulation remains one logical job/result.
 - `./scripts/dev.ps1 up` rebuilt and started the core stack; PostgreSQL/API were healthy and API/worker/web were running.
+- `./scripts/dev.ps1 reset` was exercised from deleted RuleTwin volumes; it rebuilt the stack, applied migrations, seeded exactly 100 events and one baseline rule, and an immediate reseed preserved both counts.
 - `pnpm e2e`: 2 Chromium tests exercised the safe `5`-minor-unit rule and blocked `10`-minor-unit rule through release-gate decision.
 
 ## Evidence limits and next work
 
-- GitHub Actions cannot be claimed until the user manually commits and pushes this branch.
+- GitHub Actions cannot be claimed as passing until the user commits and pushes the current correction and the pull-request workflow reruns successfully.
 - Phase 3 uses explicit fixed development actor IDs; authenticated multi-tenant RBAC is Phase 4.
 - Phase 3 stores bounded 100-event outcomes relationally; artifact offload/retention expansion is later scope.
 - Full five-family rules, dependency graph, multiple tenants, richer impact dimensions and auditor reproduction UI remain Phase 4.

@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Keep LF line endings: this initializer executes inside the Alpine PostgreSQL image.
 set -euo pipefail
 
 : "${POSTGRES_APP_PASSWORD:?POSTGRES_APP_PASSWORD is required}"

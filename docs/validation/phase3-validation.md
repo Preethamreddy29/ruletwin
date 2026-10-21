@@ -1,6 +1,6 @@
 # Phase 3 Validation Evidence
 
-**Date:** 2026-09-29  
+**Date:** 2026-10-21
 **Branch:** `codex/phase3-first-vertical-slice`  
 **Base:** Phase 2 merge `ce437aae`
 
@@ -12,12 +12,12 @@
 | OpenAPI reference validation | Pass — 10 paths, 10 operations, 118 references |
 | Repository secret scan | Pass |
 | PostgreSQL upgrade/down/base/forward and Alembic drift check | Pass — no new operations |
-| Python tests | Pass — 39, including integration/recovery |
-| Python measured coverage | Pass — 92.76% |
+| Python tests | Pass — 40, including integration/recovery and malformed engine-output fail-closed coverage |
+| Python measured coverage | Pass — 92.88% |
 | Web component tests | Pass — 4 |
 | Web coverage | Pass — 89.87% statements, 89.47% branches, 93.75% functions, 91.66% lines |
 | ESLint, TypeScript and production build | Pass |
-| Compose core build/start/health | Pass |
+| Compose clean reset/build/start/health | Pass — fresh volumes, migration, 100-event seed and idempotent reseed |
 | Playwright Chromium critical flow | Pass — allow and block paths |
 
 ## Requirement evidence
@@ -28,7 +28,9 @@
 - Incomplete, stale, substituted and self-approval rejection: PostgreSQL integration test.
 - Exact risk/gate outcomes: policy unit test and Playwright allow/block workflows.
 - Transition audit: persisted integration workflow and live API flow.
+- Clean-reset workflow: only the two labeled RuleTwin volumes were removed; PostgreSQL/API became healthy and the seed restored exactly 100 events and one baseline rule.
+- Post-Playwright persistence: 2 completed simulations, 2 impact records, 2 approvals, one allow gate, one block gate, 14 audit events and zero unprocessed outbox events.
 
 ## External evidence still pending
 
-GitHub Actions has not run because the user reserved all commit/push/PR operations. The CI workflow now includes the Playwright critical-flow job and must pass after the user's manual push.
+The pull-request workflow has run once: backend, web, Playwright and container jobs passed, while the combined contracts/security job exposed a Bandit finding for a production assertion. The assertion is replaced by explicit fail-closed validation in the current local correction. Clean-runner evidence remains pending until the user commits, pushes and obtains a fully successful rerun.

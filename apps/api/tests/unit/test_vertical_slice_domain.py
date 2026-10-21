@@ -2,6 +2,7 @@ from itertools import permutations
 
 import pytest
 
+import ruletwin.domain.simulation as simulation_module
 from ruletwin.domain.canonical import canonical_json, checksum
 from ruletwin.domain.datasets import dataset_checksum, generate_events
 from ruletwin.domain.rounding import RoundingRule, evaluate_rounding
@@ -58,6 +59,22 @@ def test_dataset_and_result_checksums_are_reproducible() -> None:
         compare_rules(baseline, candidate, first).result_checksum
         == compare_rules(baseline, candidate, second).result_checksum
     )
+
+
+def test_simulation_fails_closed_for_invalid_engine_output(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        simulation_module,
+        "evaluate_rounding",
+        lambda _rule, _event: {"amount_minor_units": "invalid"},
+    )
+    with pytest.raises(ValueError, match="integer minor units"):
+        compare_rules(
+            {"increment_minor_units": 1, "mode": "half_up"},
+            {"increment_minor_units": 5, "mode": "half_up"},
+            [{"event_id": "event", "sequence": 0, "currency": "USD", "amount_minor_units": 1}],
+        )
 
 
 def test_financial_threshold_policy_allows_and_blocks_deterministically() -> None:

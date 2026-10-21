@@ -13,6 +13,13 @@ class SimulationResult:
     result_checksum: str
 
 
+def _minor_units(outcome: dict[str, JsonValue]) -> int:
+    value = outcome.get("amount_minor_units")
+    if not isinstance(value, int) or isinstance(value, bool):
+        raise ValueError("Rounding evaluation must produce integer minor units.")
+    return value
+
+
 def compare_rules(
     baseline_rule: JsonValue,
     candidate_rule: JsonValue,
@@ -25,9 +32,8 @@ def compare_rules(
     for event in events:
         baseline = evaluate_rounding(baseline_rule, event)
         candidate = evaluate_rounding(candidate_rule, event)
-        baseline_amount = baseline["amount_minor_units"]
-        candidate_amount = candidate["amount_minor_units"]
-        assert isinstance(baseline_amount, int) and isinstance(candidate_amount, int)
+        baseline_amount = _minor_units(baseline)
+        candidate_amount = _minor_units(candidate)
         delta = candidate_amount - baseline_amount
         if delta:
             changed_count += 1

@@ -10,6 +10,8 @@ pnpm e2e
 
 Open `http://localhost:8080`. Select `5 minor units` for the allow path or `10 minor units` for the block path, run the comparison, inspect the checksum and approve the evidence. The release gate must match the policy result.
 
+For a guaranteed fresh synthetic demonstration, run `./scripts/dev.ps1 reset` instead of `up`. This removes only RuleTwin's local Compose volumes, rebuilds the core stack, applies migrations and reruns the deterministic seed.
+
 ## Recovery behavior
 
 - A claimed outbox row remains `pending` until the result transaction commits. An expired lease is reclaimed and increments the attempt number.
