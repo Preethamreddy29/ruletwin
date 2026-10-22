@@ -2,10 +2,10 @@
   "openapi": "3.1.0",
   "info": {
     "title": "RuleTwin API",
-    "version": "0.1.0",
-    "description": "Phase 1 design contract. No running service or implementation exists."
+    "version": "0.2.0-alpha-slice",
+    "description": "Phase 3 implemented contract for the deterministic one-tenant rounding-rule vertical slice."
   },
-  "servers": [{"url": "http://localhost:8000", "description": "Planned local development server"}],
+  "servers": [{"url": "http://localhost:8000", "description": "Local development server"}],
   "security": [{"bearerAuth": []}],
   "paths": {
     "/v1/tenants/{tenant_id}/rule-versions": {
@@ -14,6 +14,7 @@
         "parameters": [
           {"$ref": "#/components/parameters/TenantId"},
           {"$ref": "#/components/parameters/IdempotencyKey"},
+          {"$ref": "#/components/parameters/ActorId"},
           {"$ref": "#/components/parameters/CorrelationId"}
         ],
         "requestBody": {"required": true, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/CreateRuleVersion"}}}},
@@ -52,7 +53,7 @@
     "/v1/replay-datasets": {
       "post": {
         "operationId": "createReplayDataset",
-        "parameters": [{"$ref": "#/components/parameters/IdempotencyKey"}, {"$ref": "#/components/parameters/CorrelationId"}],
+        "parameters": [{"$ref": "#/components/parameters/IdempotencyKey"}, {"$ref": "#/components/parameters/ActorId"}, {"$ref": "#/components/parameters/CorrelationId"}],
         "requestBody": {"required": true, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/CreateDataset"}}}},
         "responses": {
           "201": {"description": "Immutable dataset manifest created", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/DatasetManifest"}}}},
@@ -64,7 +65,7 @@
     "/v1/simulations": {
       "post": {
         "operationId": "createSimulation",
-        "parameters": [{"$ref": "#/components/parameters/IdempotencyKey"}, {"$ref": "#/components/parameters/CorrelationId"}],
+        "parameters": [{"$ref": "#/components/parameters/IdempotencyKey"}, {"$ref": "#/components/parameters/ActorId"}, {"$ref": "#/components/parameters/CorrelationId"}],
         "requestBody": {"required": true, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/CreateSimulation"}}}},
         "responses": {
           "202": {"description": "Simulation accepted", "headers": {"Location": {"schema": {"type": "string", "format": "uri-reference"}}, "ETag": {"$ref": "#/components/headers/ETag"}}, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Simulation"}}}},
@@ -100,6 +101,7 @@
         "parameters": [
           {"$ref": "#/components/parameters/SimulationId"},
           {"$ref": "#/components/parameters/IdempotencyKey"},
+          {"$ref": "#/components/parameters/ActorId"},
           {"$ref": "#/components/parameters/CorrelationId"},
           {"name": "If-Match", "in": "header", "required": true, "schema": {"type": "string"}}
         ],
@@ -114,7 +116,7 @@
     "/v1/release-gates/evaluate": {
       "post": {
         "operationId": "evaluateReleaseGate",
-        "parameters": [{"$ref": "#/components/parameters/IdempotencyKey"}, {"$ref": "#/components/parameters/CorrelationId"}],
+        "parameters": [{"$ref": "#/components/parameters/IdempotencyKey"}, {"$ref": "#/components/parameters/ActorId"}, {"$ref": "#/components/parameters/CorrelationId"}],
         "requestBody": {"required": true, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/EvaluateGate"}}}},
         "responses": {
           "201": {"description": "Immutable fail-closed gate decision", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/ReleaseGate"}}}},
@@ -143,6 +145,7 @@
       "TenantId": {"name": "tenant_id", "in": "path", "required": true, "schema": {"$ref": "#/components/schemas/Uuid"}},
       "VersionId": {"name": "version_id", "in": "path", "required": true, "schema": {"$ref": "#/components/schemas/Uuid"}},
       "SimulationId": {"name": "simulation_id", "in": "path", "required": true, "schema": {"$ref": "#/components/schemas/Uuid"}},
+      "ActorId": {"name": "X-Actor-ID", "in": "header", "required": true, "description": "Synthetic development actor for the Phase 3 slice.", "schema": {"$ref": "#/components/schemas/Uuid"}},
       "IdempotencyKey": {"name": "Idempotency-Key", "in": "header", "required": true, "schema": {"type": "string", "minLength": 16, "maxLength": 128}},
       "CorrelationId": {"name": "X-Correlation-ID", "in": "header", "required": true, "schema": {"$ref": "#/components/schemas/Uuid"}}
     },
@@ -173,9 +176,9 @@
       "CreateDataset": {"type": "object", "additionalProperties": false, "required": ["tenant_id", "seed", "generator_version", "event_schema_version", "event_count"], "properties": {"tenant_id": {"$ref": "#/components/schemas/Uuid"}, "seed": {"type": "integer", "minimum": 0}, "generator_version": {"type": "string", "minLength": 1}, "event_schema_version": {"type": "string", "minLength": 1}, "event_count": {"type": "integer", "minimum": 1, "maximum": 100000}}},
       "DatasetManifest": {"allOf": [{"$ref": "#/components/schemas/CreateDataset"}, {"type": "object", "required": ["id", "checksum", "created_at"], "properties": {"id": {"$ref": "#/components/schemas/Uuid"}, "checksum": {"$ref": "#/components/schemas/Checksum"}, "created_at": {"type": "string", "format": "date-time"}}}]},
       "CreateSimulation": {"type": "object", "additionalProperties": false, "required": ["tenant_id", "baseline_rule_version_id", "candidate_rule_version_id", "dataset_manifest_id", "engine_version", "risk_policy_version_id"], "properties": {"tenant_id": {"$ref": "#/components/schemas/Uuid"}, "baseline_rule_version_id": {"$ref": "#/components/schemas/Uuid"}, "candidate_rule_version_id": {"$ref": "#/components/schemas/Uuid"}, "dataset_manifest_id": {"$ref": "#/components/schemas/Uuid"}, "engine_version": {"type": "string"}, "risk_policy_version_id": {"$ref": "#/components/schemas/Uuid"}}},
-      "Simulation": {"allOf": [{"$ref": "#/components/schemas/CreateSimulation"}, {"type": "object", "required": ["id", "status", "version", "requested_by", "created_at"], "properties": {"id": {"$ref": "#/components/schemas/Uuid"}, "status": {"type": "string", "enum": ["accepted", "running", "completed", "failed", "cancelled"]}, "version": {"type": "integer", "minimum": 1}, "result_checksum": {"oneOf": [{"$ref": "#/components/schemas/Checksum"}, {"type": "null"}]}, "requested_by": {"$ref": "#/components/schemas/Uuid"}, "created_at": {"type": "string", "format": "date-time"}}}]},
+      "Simulation": {"allOf": [{"$ref": "#/components/schemas/CreateSimulation"}, {"type": "object", "required": ["id", "status", "version", "requested_by", "created_at"], "properties": {"id": {"$ref": "#/components/schemas/Uuid"}, "status": {"type": "string", "enum": ["requested", "queued", "running", "completed", "failed", "cancelled"]}, "version": {"type": "integer", "minimum": 1}, "result_checksum": {"oneOf": [{"$ref": "#/components/schemas/Checksum"}, {"type": "null"}]}, "requested_by": {"$ref": "#/components/schemas/Uuid"}, "created_at": {"type": "string", "format": "date-time"}}}]},
       "RiskEvaluation": {"type": "object", "required": ["policy_version_id", "decision", "reasons", "checksum"], "properties": {"policy_version_id": {"$ref": "#/components/schemas/Uuid"}, "decision": {"type": "string", "enum": ["allow", "block", "error"]}, "reasons": {"type": "array", "items": {"type": "string"}}, "checksum": {"$ref": "#/components/schemas/Checksum"}}},
-      "ImpactReport": {"type": "object", "required": ["simulation_id", "result_checksum", "risk"], "properties": {"simulation_id": {"$ref": "#/components/schemas/Uuid"}, "result_checksum": {"$ref": "#/components/schemas/Checksum"}, "risk": {"$ref": "#/components/schemas/RiskEvaluation"}}},
+      "ImpactReport": {"type": "object", "required": ["simulation_id", "result_checksum", "impact_checksum", "summary", "risk"], "properties": {"simulation_id": {"$ref": "#/components/schemas/Uuid"}, "result_checksum": {"$ref": "#/components/schemas/Checksum"}, "impact_checksum": {"$ref": "#/components/schemas/Checksum"}, "summary": {"type": "object", "required": ["event_count", "changed_event_count", "unchanged_event_count", "total_financial_delta_minor_units", "maximum_financial_delta_minor_units", "currency"]}, "risk": {"$ref": "#/components/schemas/RiskEvaluation"}}},
       "CreateApproval": {"type": "object", "additionalProperties": false, "required": ["result_checksum", "policy_version_id", "decision"], "properties": {"result_checksum": {"$ref": "#/components/schemas/Checksum"}, "policy_version_id": {"$ref": "#/components/schemas/Uuid"}, "decision": {"type": "string", "enum": ["approve", "reject"]}, "rationale": {"type": "string", "maxLength": 2000}}},
       "Approval": {"allOf": [{"$ref": "#/components/schemas/CreateApproval"}, {"type": "object", "required": ["id", "simulation_id", "reviewer_id", "created_at"], "properties": {"id": {"$ref": "#/components/schemas/Uuid"}, "simulation_id": {"$ref": "#/components/schemas/Uuid"}, "reviewer_id": {"$ref": "#/components/schemas/Uuid"}, "created_at": {"type": "string", "format": "date-time"}}}]},
       "EvaluateGate": {"type": "object", "additionalProperties": false, "required": ["simulation_id", "approval_id", "result_checksum", "policy_version_id"], "properties": {"simulation_id": {"$ref": "#/components/schemas/Uuid"}, "approval_id": {"$ref": "#/components/schemas/Uuid"}, "result_checksum": {"$ref": "#/components/schemas/Checksum"}, "policy_version_id": {"$ref": "#/components/schemas/Uuid"}}},

@@ -50,7 +50,7 @@ services:
       RULETWIN_CORS_ORIGINS: http://localhost:5173,http://localhost:8080
     ports: ["8000:8000"]
     depends_on:
-      migrate:
+      seed:
         condition: service_completed_successfully
     healthcheck:
       test:
@@ -80,13 +80,32 @@ services:
       RULETWIN_LOG_LEVEL: ${RULETWIN_LOG_LEVEL:-INFO}
     command: ["ruletwin-worker"]
     depends_on:
-      migrate:
+      seed:
         condition: service_completed_successfully
     networks: [backend]
     read_only: true
     tmpfs: [/tmp]
     security_opt: ["no-new-privileges:true"]
     restart: unless-stopped
+
+  seed:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    profiles: ["core", "full"]
+    environment:
+      RULETWIN_ENVIRONMENT: dev
+      RULETWIN_DATABASE_URL: postgresql+psycopg://ruletwin_app:${POSTGRES_APP_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      RULETWIN_LOG_LEVEL: INFO
+    command: ["ruletwin-seed", "--seed", "ruletwin-dev-v1"]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    networks: [backend]
+    read_only: true
+    tmpfs: [/tmp]
+    security_opt: ["no-new-privileges:true"]
+    restart: "no"
 
   web:
     build:

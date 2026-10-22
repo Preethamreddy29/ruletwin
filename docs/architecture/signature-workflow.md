@@ -1,6 +1,6 @@
 # Signature Workflow Trace
 
-This describes intended behavior, not an implemented flow.
+The Phase 3 rounding slice implements steps 1–9 for one fixed development tenant and separate synthetic author/approver. Step 10's general auditor reproduction/export experience remains Phase 4; Phase 3 reproducibility is verified by immutable IDs and checksum tests.
 
 | Step | Action | Contract/module | Planned evidence | Planned controls/tests |
 |---:|---|---|---|---|

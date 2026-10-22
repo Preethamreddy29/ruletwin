@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param(
     [Parameter(Position = 0)]
-    [ValidateSet('bootstrap', 'up', 'down', 'logs', 'seed', 'status')]
+    [ValidateSet('bootstrap', 'up', 'down', 'logs', 'seed', 'reset', 'status')]
     [string]$Command = 'status'
 )
 
@@ -50,6 +50,18 @@ try {
         'down' { docker compose --profile full down }
         'logs' { docker compose --profile core logs --follow --tail 100 }
         'seed' { docker compose --profile core run --rm api ruletwin-seed }
+        'reset' {
+            if (-not (Get-Command docker -ErrorAction SilentlyContinue)) {
+                throw 'Docker with Compose v2 is required. Install/start Docker Desktop, then retry.'
+            }
+            New-LocalEnvironment
+            Write-Host 'Resetting RuleTwin local synthetic data and rebuilding the core demo stack.'
+            docker compose --profile full down --volumes --remove-orphans
+            if ($LASTEXITCODE -ne 0) { throw 'RuleTwin stack reset failed.' }
+            docker compose --profile core up --build --detach
+            if ($LASTEXITCODE -ne 0) { throw 'RuleTwin stack startup failed after reset.' }
+            docker compose --profile core ps
+        }
         'status' {
             git status --short
             if (Get-Command docker -ErrorAction SilentlyContinue) {
