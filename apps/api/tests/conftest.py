@@ -1,6 +1,6 @@
 import asyncio
 import sys
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Callable
 
 import pytest
 from httpx import ASGITransport, AsyncClient
@@ -9,11 +9,10 @@ from ruletwin.api.app import create_app
 from ruletwin.config import Settings
 
 
-@pytest.fixture(scope="session")
-def event_loop_policy() -> asyncio.AbstractEventLoopPolicy:
+def pytest_asyncio_loop_factories() -> dict[str, Callable[[], asyncio.AbstractEventLoop]]:
     if sys.platform == "win32":
-        return asyncio.WindowsSelectorEventLoopPolicy()
-    return asyncio.DefaultEventLoopPolicy()
+        return {"windows-selector": asyncio.SelectorEventLoop}
+    return {"default": asyncio.new_event_loop}
 
 
 @pytest.fixture
@@ -22,6 +21,7 @@ def settings() -> Settings:
         environment="test",
         database_url="postgresql+psycopg://test:test@localhost/ruletwin_test",
         log_level="CRITICAL",
+        jwt_secret="test-only-ruletwin-jwt-secret-000000000000",
     )
 
 

@@ -20,7 +20,11 @@ class Settings(BaseSettings):
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
     cors_origins: str = "http://localhost:5173,http://localhost:8080"
     service_name: str = "ruletwin-api"
-    version: str = "0.2.0-alpha-slice"
+    version: str = "0.3.0-alpha-authz"
+    jwt_secret: str = Field(min_length=32)
+    jwt_issuer: str = "ruletwin-local"
+    jwt_audience: str = "ruletwin-api"
+    jwt_ttl_seconds: int = Field(default=900, ge=60, le=3600)
     synthetic_user_id: str = "4c542107-b2c6-5f9f-9bb8-832efd9b3dc2"
     synthetic_user_email: str = "analyst@novabill.example"
     readiness_timeout_seconds: float = Field(default=2.0, gt=0, le=10)

@@ -1,6 +1,6 @@
 # Authorization and Tenant-Isolation Matrix
 
-Every row is a planned server-side decision and later requires same-tenant allow tests plus cross-tenant, wrong-role, absent-membership and stale-state denial tests.
+Every row is a server-side decision requiring same-tenant allow tests plus cross-tenant, wrong-role, absent-membership and stale-state denial tests. Phase 4A implements the existing rule creation, dataset/simulation creation, simulation/impact reads, review, gate, and audit-list rows. Rows for rule diff, export/reproduction, artifacts, operations and webhooks remain planned.
 
 | Resource/action | Analyst | QA reviewer | Release approver | Auditor | Operator | Object/state rule |
 |---|---:|---:|---:|---:|---:|---|

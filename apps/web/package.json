@@ -1,6 +1,6 @@
 {
   "name": "@ruletwin/web",
-  "version": "0.2.0-alpha-slice",
+  "version": "0.3.0-alpha-authz",
   "private": true,
   "type": "module",
   "scripts": {

@@ -13,7 +13,11 @@ def test_configuration_requires_environment_and_database(monkeypatch: pytest.Mon
 
 def test_configuration_rejects_non_postgres_database() -> None:
     with pytest.raises(ValidationError, match="PostgreSQL"):
-        Settings(environment="test", database_url="sqlite:///unsafe.db")
+        Settings(
+            environment="test",
+            database_url="sqlite:///unsafe.db",
+            jwt_secret="test-only-ruletwin-jwt-secret-000000000000",
+        )
 
 
 def test_cors_origins_are_trimmed() -> None:
@@ -21,5 +25,6 @@ def test_cors_origins_are_trimmed() -> None:
         environment="test",
         database_url="postgresql://localhost/ruletwin_test",
         cors_origins="http://one.example, http://two.example ",
+        jwt_secret="test-only-ruletwin-jwt-secret-000000000000",
     )
     assert settings.parsed_cors_origins == ["http://one.example", "http://two.example"]

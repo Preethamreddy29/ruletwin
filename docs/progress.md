@@ -1,37 +1,36 @@
 # Progress and Status
 
-**As of:** 2026-10-21
+**As of:** 2026-10-24
 
-**Branch:** `codex/phase3-first-vertical-slice` (hardening commit `b498c48` pushed)
+**Branch:** `codex/phase4a-multitenant-authorization`
 
-**Milestone:** RuleTwin Phase 3 — first vertical slice
+**Milestone:** RuleTwin Phase 4A — multi-tenant authorization slice
 
-**Overall:** Phase 3 implementation and exit evidence pass. The production assertion identified by the first clean-runner attempt was replaced by explicit fail-closed validation; the rerun succeeded across all five pull-request jobs.
+**Overall:** Phase 3 is merged. Phase 4A implementation and local evidence pass; clean-runner GitHub Actions evidence remains pending after push and pull-request creation.
 
 ## Implemented
 
-- One tenant, separate synthetic author/approver, one declarative rounding family and integer-minor-unit execution.
-- Canonical JSON/checksums, immutable rule/dataset/policy/evidence records and deterministic 100-event scenario pack.
-- Baseline-versus-candidate replay, relational outcomes/impact, versioned financial-threshold risk evaluation and immutable release gate.
-- Transactional simulation plus outbox creation, lease reclaim, idempotent completion and recovery after claim or result commit.
-- Incomplete, stale, substituted and self-authored approval controls bound to result checksum, policy ID and simulation ETag.
-- Append-only audit records for rule, dataset, simulation, approval and gate mutations/state transitions.
-- Guided responsive UI for propose, dataset selection, polling, impact review and decision.
-- Playwright Chromium coverage for both allow and block critical paths.
-- Predictable `dev.ps1 reset` workflow recreates local volumes, migrations and deterministic seed without manual database edits; repository attributes preserve executable LF line endings on Windows.
+- Two deterministic fictional tenants: NovaBill Sandbox and Brightline Sandbox.
+- Four single-role development personas per tenant: analyst, QA reviewer, release approver, and auditor.
+- Short-lived signed development JWTs with issuer, audience, issued-at, and expiry validation.
+- PostgreSQL-resolved tenant memberships and roles; browser-supplied role claims are not trusted.
+- Tenant- and object-scoped rule, dataset, simulation, impact, approval, release-gate, and audit operations.
+- Stable non-enumerating `404` behavior for absent and cross-tenant objects.
+- Role-separated UI workflow with an explicit tenant/persona switcher and cross-tenant isolation proof.
+- Existing deterministic replay, allow/block risk decisions, checksum-bound approval, outbox recovery, and audit behavior remain intact.
 
 ## Verified locally
 
-- `./scripts/check.ps1 -Integration`: formatting, lint, mypy, OpenAPI, secret scan, reversible migrations, zero schema drift, 40 Python tests, 4 web tests, type check and production build all passed.
-- Python measured scope: 92.88%; web: 89.87% statements, 89.47% branches, 93.75% functions and 91.66% lines.
-- Worker recovery suite passes for crash after claim and redelivery after committed result; duplicate simulation remains one logical job/result.
-- `./scripts/dev.ps1 up` rebuilt and started the core stack; PostgreSQL/API were healthy and API/worker/web were running.
-- `./scripts/dev.ps1 reset` was exercised from deleted RuleTwin volumes; it rebuilt the stack, applied migrations, seeded exactly 100 events and one baseline rule, and an immediate reseed preserved both counts.
-- `pnpm e2e`: 2 Chromium tests exercised the safe `5`-minor-unit rule and blocked `10`-minor-unit rule through release-gate decision.
+- `./scripts/check.ps1 -Integration` passes formatting, lint, strict mypy, OpenAPI validation, secret scan, reversible migrations, zero schema drift, 46 Python tests, web tests, type checking, and the production build.
+- Python measured coverage: 93.56%.
+- Web statement coverage: 88.14%.
+- Playwright Chromium passes the multi-persona allow and block paths and the Brightline-to-NovaBill non-enumerating denial path.
+- Compose upgrade seeding succeeds against the existing Phase 3 volume without manual database changes.
+- Live verification confirms API version `0.3.0-alpha-authz`, two tenants, eight memberships, completed simulations, allow and block gates, zero pending outbox events, and no API/worker errors.
 
 ## Evidence limits and next work
 
-- GitHub Actions clean-runner evidence passes at hardening commit `b498c48` across backend/integration, web/build, contracts/security, Compose and Playwright jobs.
-- Phase 3 uses explicit fixed development actor IDs; authenticated multi-tenant RBAC is Phase 4.
-- Phase 3 stores bounded 100-event outcomes relationally; artifact offload/retention expansion is later scope.
-- Full five-family rules, dependency graph, multiple tenants, richer impact dimensions and auditor reproduction UI remain Phase 4.
+- The development token endpoint and synthetic identities are not production authentication or OIDC.
+- Phase 4A proves isolation only for currently implemented API/UI paths; export, artifact, webhook, metrics, and operator surfaces remain future authorization work.
+- One rounding rule family and bounded relational outcomes remain; five rule families, dependency analysis, richer impact dimensions, evidence export, and pagination remain in Phase 4.
+- Clean-runner CI and review evidence are pending after branch push and pull-request creation.

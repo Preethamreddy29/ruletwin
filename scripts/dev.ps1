@@ -11,15 +11,24 @@ $python = Join-Path $repo '.venv/Scripts/python.exe'
 $envFile = Join-Path $repo '.env'
 
 function New-LocalEnvironment {
-    if (Test-Path -LiteralPath $envFile) { return }
+    if (Test-Path -LiteralPath $envFile) {
+        if (-not (Select-String -LiteralPath $envFile -Pattern '^RULETWIN_JWT_SECRET=' -Quiet)) {
+            $jwt = ([Guid]::NewGuid().ToString('N') + [Guid]::NewGuid().ToString('N'))
+            Add-Content -LiteralPath $envFile -Value "RULETWIN_JWT_SECRET=${jwt}" -Encoding utf8NoBOM
+            Write-Host 'Added a generated development-only JWT signing secret to .env.'
+        }
+        return
+    }
     $admin = [Guid]::NewGuid().ToString('N')
     $app = [Guid]::NewGuid().ToString('N')
     $test = [Guid]::NewGuid().ToString('N')
+    $jwt = ([Guid]::NewGuid().ToString('N') + [Guid]::NewGuid().ToString('N'))
     @"
 RULETWIN_ENVIRONMENT=dev
 RULETWIN_DATABASE_URL=postgresql+psycopg://ruletwin_app:${app}@localhost:5432/ruletwin
 RULETWIN_LOG_LEVEL=INFO
 RULETWIN_CORS_ORIGINS=http://localhost:5173,http://localhost:8080
+RULETWIN_JWT_SECRET=${jwt}
 POSTGRES_DB=ruletwin
 POSTGRES_USER=ruletwin_admin
 POSTGRES_PASSWORD=${admin}

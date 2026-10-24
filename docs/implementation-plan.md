@@ -18,6 +18,7 @@ The sibling portfolio checkout used for this phase is `D:\sunny\Profile\projects
 | 1 — Requirements and architecture | Complete and merged in PR #1 | Safe and feasible design |
 | 2 — Engineering foundation | Merged at `ce437aae` | Repeatable engineering base |
 | 3 — First vertical slice | Implementation, local validation and clean CI evidence complete | Core workflow is real |
+| 4A — Multi-tenant authorization slice | Implementation and local evidence complete; clean CI pending | Tenant boundary is executable |
 
 ## Phase 1 deliverables
 
@@ -71,3 +72,16 @@ Phase 2 closes only when one command starts all core services, one command runs 
 Phase 3 passes locally when the migration drift gate, full checks, crash recovery integration suite,
 live Compose workflow, and Playwright allow/block paths pass. Clean-runner CI after the user's manual
 commit/push remains external evidence; see [`phase3-exit-audit.md`](phase3-exit-audit.md).
+
+## Phase 4A increment and gate
+
+- Two deterministic fictional tenants and eight single-role development personas.
+- Short-lived HS256 development JWTs with issuer, audience, issued-at and expiry validation.
+- PostgreSQL-resolved tenant membership and roles; browser role claims are not trusted.
+- Object-scoped reads/actions and stable non-enumerating cross-tenant denial.
+- Explicit analyst, QA reviewer, release approver and auditor UI transitions.
+- Chromium proof of cross-tenant denial plus both allow and block release gates.
+
+Phase 4A passes locally when the full role/object integration slice, Phase 3 recovery regressions,
+Compose upgrade seed, live API, and Playwright authorization flows pass. It is an increment toward,
+not completion of, the Phase 4 MVP.
