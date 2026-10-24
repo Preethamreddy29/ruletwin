@@ -2,17 +2,21 @@
 
 RuleTwin is a deterministic, tenant-aware change-impact simulator for proposed business-rule changes. It replays synthetic events through baseline and candidate rule versions, compares outcomes, applies a versioned risk policy, and produces reproducible approval evidence.
 
-> **Current state:** Phase 3 is merged at `5a13a3e`. Phase 4A adds a locally validated multi-tenant authorization slice on `codex/phase4a-multitenant-authorization`; clean-runner CI remains pending until the branch is pushed and reviewed.
+> **Current state:** Phase 4A is merged into `main` at `cffdb30`. Protected clean-runner CI passed for the Phase 4A merge and again at `d64275f` after the Gitleaks action upgrade. RuleTwin is a validated synthetic-data pilot candidate, not a production-ready service.
 
 ## Product boundary
 
-RuleTwin is not a billing engine, no-code rules platform, payment system, feature-flag service, or AI rule generator. It uses fictional NovaBill scenarios and synthetic data only.
+RuleTwin is not a billing engine, no-code rules platform, payment system, feature-flag service, or AI rule generator. It uses fictional NovaBill and Brightline scenarios with synthetic data only.
 
-The portfolio index and governing sources are maintained in the sibling `enterprise-rule-intelligence` repository. This repository owns RuleTwin's product contracts, architecture decisions, security model, and eventual independently deployable runtime.
+The portfolio index and governing sources are maintained in the sibling `enterprise-rule-intelligence` repository. This repository owns RuleTwin's product contracts, architecture decisions, security model, and independently deployable runtime.
 
 ## Current milestone
 
-Phase 4A preserves the deterministic rounding workflow while adding two synthetic tenants, short-lived signed development identities, PostgreSQL-resolved memberships, role-separated analyst/reviewer/release-approver/auditor actions, object-level authorization, and non-enumerating cross-tenant denial. The UI makes the identity and tenant boundary directly demonstrable while Playwright retains both allow and block release paths.
+Phase 4A preserves the deterministic rounding workflow while adding two synthetic tenants, short-lived signed development identities, PostgreSQL-resolved memberships, role-separated analyst/reviewer/release-approver/auditor actions, object-level authorization, and non-enumerating cross-tenant denial. The UI makes the identity and tenant boundary directly demonstrable while Playwright validates allow, block, and cross-tenant-denial paths.
+
+The next milestone is controlled-pilot readiness. Its scope, exclusions, required evidence, and user decisions are defined in [`docs/pilot-readiness-plan.md`](docs/pilot-readiness-plan.md). Production OIDC, full-surface isolation, recovery evidence, deployment automation, operational alerting, resource controls, and measured performance remain required before an externally hosted pilot.
+
+## Run locally
 
 Local setup and operation are documented in [`docs/operations/development.md`](docs/operations/development.md). After Docker Desktop and WSL are running:
 
@@ -22,8 +26,13 @@ Local setup and operation are documented in [`docs/operations/development.md`](d
 ./scripts/check.ps1
 ```
 
+The guided authorization demonstration is documented in [`docs/demo/phase4a-authorization-guide.md`](docs/demo/phase4a-authorization-guide.md).
+
+## Evidence and design
+
 Start with:
 
+- [`docs/pilot-readiness-plan.md`](docs/pilot-readiness-plan.md)
 - [`docs/implementation-plan.md`](docs/implementation-plan.md)
 - [`docs/domain-model.md`](docs/domain-model.md)
 - [`docs/product/requirements.md`](docs/product/requirements.md)
@@ -39,10 +48,12 @@ Start with:
 - [`docs/validation/phase2-validation.md`](docs/validation/phase2-validation.md)
 - [`docs/phase3-exit-audit.md`](docs/phase3-exit-audit.md)
 - [`docs/validation/phase3-validation.md`](docs/validation/phase3-validation.md)
-- [`docs/demo/phase3-demo-guide.md`](docs/demo/phase3-demo-guide.md)
 - [`docs/phase4a-exit-audit.md`](docs/phase4a-exit-audit.md)
 - [`docs/validation/phase4a-validation.md`](docs/validation/phase4a-validation.md)
-- [`docs/demo/phase4a-authorization-guide.md`](docs/demo/phase4a-authorization-guide.md)
+
+## Security and limitations
+
+RuleTwin remains pre-release. The development identity endpoint is not production authentication, only implemented API/UI paths have executable tenant-isolation evidence, and only synthetic data is approved. See [`SECURITY.md`](SECURITY.md) and the pilot-readiness plan before deployment.
 
 ## License
 

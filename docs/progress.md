@@ -1,36 +1,38 @@
 # Progress and Status
 
-**As of:** 2026-10-24
+**As of:** 2026-10-24  
+**Baseline:** `main` at `d64275f`  
+**Milestone:** Controlled-pilot readiness baseline  
+**Overall:** Phase 4A is merged and its protected clean-runner CI passed. RuleTwin is suitable for a synthetic local demonstration. It is not approved for an externally hosted pilot or real data.
 
-**Branch:** `codex/phase4a-multitenant-authorization`
+## Completed evidence
 
-**Milestone:** RuleTwin Phase 4A — multi-tenant authorization slice
+- Phase 3 first vertical slice merged through PR #13.
+- Phase 4A multi-tenant authorization merged through PR #18 as `cffdb30`.
+- Phase 4A pull-request and post-merge workflows passed all five protected CI checks.
+- Main CI passed again at `d64275f` after the Gitleaks action upgrade.
+- Two fictional tenants and four role-separated development personas per tenant are implemented.
+- PostgreSQL-resolved membership, tenant/object authorization, non-enumerating cross-tenant denial, deterministic replay, fail-closed risk decisions, checksum-bound approval, release gates, outbox recovery, and audit evidence have executable coverage.
+- Local Phase 4A validation recorded 46 Python tests, 93.56% Python coverage, 88.14% web statement coverage, Playwright critical-flow coverage, reversible migrations, zero schema drift, and no API/worker errors in the validated run.
 
-**Overall:** Phase 3 is merged. Phase 4A implementation and local evidence pass; clean-runner GitHub Actions evidence remains pending after push and pull-request creation.
+## Current limits
 
-## Implemented
+- The development identity endpoint is not production authentication or OIDC.
+- Isolation evidence covers implemented API/UI paths only; every future export, artifact, webhook, metrics, and operator path must be protected or disabled.
+- Only the deterministic rounding-rule family and synthetic data packs are supported.
+- Hosted deployment, secret management, recovery, rollback, operational alerts, resource limits, SBOM/release artifacts, and measured reference-profile performance do not yet have pilot exit evidence.
 
-- Two deterministic fictional tenants: NovaBill Sandbox and Brightline Sandbox.
-- Four single-role development personas per tenant: analyst, QA reviewer, release approver, and auditor.
-- Short-lived signed development JWTs with issuer, audience, issued-at, and expiry validation.
-- PostgreSQL-resolved tenant memberships and roles; browser-supplied role claims are not trusted.
-- Tenant- and object-scoped rule, dataset, simulation, impact, approval, release-gate, and audit operations.
-- Stable non-enumerating `404` behavior for absent and cross-tenant objects.
-- Role-separated UI workflow with an explicit tenant/persona switcher and cross-tenant isolation proof.
-- Existing deterministic replay, allow/block risk decisions, checksum-bound approval, outbox recovery, and audit behavior remain intact.
+## Next milestone
 
-## Verified locally
+The approved implementation baseline is [`docs/pilot-readiness-plan.md`](pilot-readiness-plan.md). Work is ordered as:
 
-- `./scripts/check.ps1 -Integration` passes formatting, lint, strict mypy, OpenAPI validation, secret scan, reversible migrations, zero schema drift, 46 Python tests, web tests, type checking, and the production build.
-- Python measured coverage: 93.56%.
-- Web statement coverage: 88.14%.
-- Playwright Chromium passes the multi-persona allow and block paths and the Brightline-to-NovaBill non-enumerating denial path.
-- Compose upgrade seeding succeeds against the existing Phase 3 volume without manual database changes.
-- Live verification confirms API version `0.3.0-alpha-authz`, two tenants, eight memberships, completed simulations, allow and block gates, zero pending outbox events, and no API/worker errors.
+1. Evidence export and complete authorization of every pilot-visible surface.
+2. Production OIDC with development identities disabled outside local mode.
+3. Resource limits, rate controls, observability, and alerting.
+4. Reproducible deployment, external secret storage, backup/restore, and rollback.
+5. Security, isolation, recovery, performance, and usability acceptance.
+6. Immutable `v0.4.0-pilot.1` release after every gate passes.
 
-## Evidence limits and next work
+## Owner decisions required
 
-- The development token endpoint and synthetic identities are not production authentication or OIDC.
-- Phase 4A proves isolation only for currently implemented API/UI paths; export, artifact, webhook, metrics, and operator surfaces remain future authorization work.
-- One rounding rule family and bounded relational outcomes remain; five rule families, dependency analysis, richer impact dimensions, evidence export, and pagination remain in Phase 4.
-- Clean-runner CI and review evidence are pending after branch push and pull-request creation.
+Hosting and budget, domain/TLS ownership, OIDC provider, pilot identities and roles, backup retention and RPO/RTO, availability/support window, and hosted visibility remain required before deployment work can close.

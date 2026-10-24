@@ -16,6 +16,7 @@ The authoritative requirements remain in [`product/requirements.md`](product/req
 | Implemented-path tenant isolation | Auth dependency plus tenant-scoped application queries | Same-tenant allow; cross-tenant and absent-object equivalent 404; isolated audit lists | Phase 4A slice complete |
 | High threats and full-surface isolation | Phase 1 threat/control plans | Export/artifact/webhook/metrics/operator negative matrix | Remaining Phase 4/5 scope |
 
+
 ## Current gate
 
-Phase 3 passes local and clean-runner evidence. Phase 4A passes locally for the implemented authorization slice; clean-runner evidence remains pending branch push. See [`phase4a-exit-audit.md`](phase4a-exit-audit.md) and [`validation/phase4a-validation.md`](validation/phase4a-validation.md).
+Phase 3 and Phase 4A pass their local and protected clean-runner gates. Phase 4A merged through PR #18 at `cffdb30`, and main CI passed again at `d64275f`. Controlled-pilot hardening is planned and not yet satisfied; see [`phase4a-exit-audit.md`](phase4a-exit-audit.md), [`validation/phase4a-validation.md`](validation/phase4a-validation.md), and [`pilot-readiness-plan.md`](pilot-readiness-plan.md).
