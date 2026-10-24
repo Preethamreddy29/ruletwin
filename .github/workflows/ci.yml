@@ -57,7 +57,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
         with:
           version: 10.18.0
       - uses: actions/setup-node@v4
@@ -83,7 +83,7 @@ jobs:
       RULETWIN_JWT_SECRET: ci-jwt-placeholder-at-least-32-characters # gitleaks:allow
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
         with:
           version: 10.18.0
       - uses: actions/setup-node@v4
@@ -131,7 +131,7 @@ jobs:
       RULETWIN_JWT_SECRET: ci-jwt-placeholder-at-least-32-characters # gitleaks:allow
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
         with:
           version: 10.18.0
       - run: docker compose --profile full config --quiet
