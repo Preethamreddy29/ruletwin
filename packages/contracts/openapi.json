@@ -2,8 +2,8 @@
   "openapi": "3.1.0",
   "info": {
     "title": "RuleTwin API",
-    "version": "0.2.0-alpha-slice",
-    "description": "Phase 3 implemented contract for the deterministic one-tenant rounding-rule vertical slice."
+    "version": "0.3.0-alpha-authz",
+    "description": "Phase 4A contract for signed local identity, multi-tenant RBAC, object authorization, and the deterministic rounding-rule workflow."
   },
   "servers": [{"url": "http://localhost:8000", "description": "Local development server"}],
   "security": [{"bearerAuth": []}],
@@ -14,7 +14,6 @@
         "parameters": [
           {"$ref": "#/components/parameters/TenantId"},
           {"$ref": "#/components/parameters/IdempotencyKey"},
-          {"$ref": "#/components/parameters/ActorId"},
           {"$ref": "#/components/parameters/CorrelationId"}
         ],
         "requestBody": {"required": true, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/CreateRuleVersion"}}}},
@@ -53,7 +52,7 @@
     "/v1/replay-datasets": {
       "post": {
         "operationId": "createReplayDataset",
-        "parameters": [{"$ref": "#/components/parameters/IdempotencyKey"}, {"$ref": "#/components/parameters/ActorId"}, {"$ref": "#/components/parameters/CorrelationId"}],
+        "parameters": [{"$ref": "#/components/parameters/IdempotencyKey"}, {"$ref": "#/components/parameters/CorrelationId"}],
         "requestBody": {"required": true, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/CreateDataset"}}}},
         "responses": {
           "201": {"description": "Immutable dataset manifest created", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/DatasetManifest"}}}},
@@ -65,7 +64,7 @@
     "/v1/simulations": {
       "post": {
         "operationId": "createSimulation",
-        "parameters": [{"$ref": "#/components/parameters/IdempotencyKey"}, {"$ref": "#/components/parameters/ActorId"}, {"$ref": "#/components/parameters/CorrelationId"}],
+        "parameters": [{"$ref": "#/components/parameters/IdempotencyKey"}, {"$ref": "#/components/parameters/CorrelationId"}],
         "requestBody": {"required": true, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/CreateSimulation"}}}},
         "responses": {
           "202": {"description": "Simulation accepted", "headers": {"Location": {"schema": {"type": "string", "format": "uri-reference"}}, "ETag": {"$ref": "#/components/headers/ETag"}}, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Simulation"}}}},
@@ -101,7 +100,6 @@
         "parameters": [
           {"$ref": "#/components/parameters/SimulationId"},
           {"$ref": "#/components/parameters/IdempotencyKey"},
-          {"$ref": "#/components/parameters/ActorId"},
           {"$ref": "#/components/parameters/CorrelationId"},
           {"name": "If-Match", "in": "header", "required": true, "schema": {"type": "string"}}
         ],
@@ -116,7 +114,7 @@
     "/v1/release-gates/evaluate": {
       "post": {
         "operationId": "evaluateReleaseGate",
-        "parameters": [{"$ref": "#/components/parameters/IdempotencyKey"}, {"$ref": "#/components/parameters/ActorId"}, {"$ref": "#/components/parameters/CorrelationId"}],
+        "parameters": [{"$ref": "#/components/parameters/IdempotencyKey"}, {"$ref": "#/components/parameters/CorrelationId"}],
         "requestBody": {"required": true, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/EvaluateGate"}}}},
         "responses": {
           "201": {"description": "Immutable fail-closed gate decision", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/ReleaseGate"}}}},
@@ -145,7 +143,6 @@
       "TenantId": {"name": "tenant_id", "in": "path", "required": true, "schema": {"$ref": "#/components/schemas/Uuid"}},
       "VersionId": {"name": "version_id", "in": "path", "required": true, "schema": {"$ref": "#/components/schemas/Uuid"}},
       "SimulationId": {"name": "simulation_id", "in": "path", "required": true, "schema": {"$ref": "#/components/schemas/Uuid"}},
-      "ActorId": {"name": "X-Actor-ID", "in": "header", "required": true, "description": "Synthetic development actor for the Phase 3 slice.", "schema": {"$ref": "#/components/schemas/Uuid"}},
       "IdempotencyKey": {"name": "Idempotency-Key", "in": "header", "required": true, "schema": {"type": "string", "minLength": 16, "maxLength": 128}},
       "CorrelationId": {"name": "X-Correlation-ID", "in": "header", "required": true, "schema": {"$ref": "#/components/schemas/Uuid"}}
     },

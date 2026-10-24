@@ -136,6 +136,60 @@ h1 {
   display: grid;
   gap: 5px;
 }
+
+.identity label {
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.identity select {
+  width: 100%;
+  margin: 0.45rem 0 0.7rem;
+}
+
+.role-hint {
+  display: block;
+  margin-top: 0.65rem;
+  color: var(--muted);
+}
+
+.secondary {
+  margin-top: 0.75rem;
+  background: transparent;
+  color: var(--ink);
+  border: 1px solid var(--line);
+}
+
+.isolation-card {
+  max-width: 1180px;
+  margin: 2rem auto;
+  padding: 1.5rem;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 1rem;
+  align-items: center;
+  border: 1px solid #f0b86b;
+  border-radius: 18px;
+  background: #fff8ec;
+}
+
+.isolation-card h2,
+.isolation-card p {
+  margin: 0.25rem 0;
+}
+
+.proof {
+  grid-column: 1 / -1;
+  margin: 0.5rem 0 0;
+  padding: 0.8rem 1rem;
+  border-radius: 10px;
+  color: #164e3b;
+  background: #def7ec;
+  font-weight: 700;
+}
 .identity span,
 .identity small {
   color: #7f8e8a;

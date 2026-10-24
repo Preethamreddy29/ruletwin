@@ -2,7 +2,7 @@
 
 RuleTwin is a deterministic, tenant-aware change-impact simulator for proposed business-rule changes. It replays synthetic events through baseline and candidate rule versions, compares outcomes, applies a versioned risk policy, and produces reproducible approval evidence.
 
-> **Current state:** Phase 2 is merged. Phase 3 is implemented on `codex/phase3-first-vertical-slice`; local validation and the clean-runner pull-request workflow pass at hardening commit `b498c48`.
+> **Current state:** Phase 3 is merged at `5a13a3e`. Phase 4A adds a locally validated multi-tenant authorization slice on `codex/phase4a-multitenant-authorization`; clean-runner CI remains pending until the branch is pushed and reviewed.
 
 ## Product boundary
 
@@ -12,7 +12,7 @@ The portfolio index and governing sources are maintained in the sibling `enterpr
 
 ## Current milestone
 
-Phase 3 provides one complete NovaBill Sandbox workflow: propose an immutable rounding rule, replay a versioned 100-event synthetic dataset against baseline and candidate rules, inspect deterministic financial impact and fail-closed risk, then bind a separate approver and release gate to the exact result checksum. PostgreSQL leases recover claimed work, duplicate requests are idempotent, protected transitions are audited, and Playwright verifies both allow and block paths.
+Phase 4A preserves the deterministic rounding workflow while adding two synthetic tenants, short-lived signed development identities, PostgreSQL-resolved memberships, role-separated analyst/reviewer/release-approver/auditor actions, object-level authorization, and non-enumerating cross-tenant denial. The UI makes the identity and tenant boundary directly demonstrable while Playwright retains both allow and block release paths.
 
 Local setup and operation are documented in [`docs/operations/development.md`](docs/operations/development.md). After Docker Desktop and WSL are running:
 
@@ -40,6 +40,9 @@ Start with:
 - [`docs/phase3-exit-audit.md`](docs/phase3-exit-audit.md)
 - [`docs/validation/phase3-validation.md`](docs/validation/phase3-validation.md)
 - [`docs/demo/phase3-demo-guide.md`](docs/demo/phase3-demo-guide.md)
+- [`docs/phase4a-exit-audit.md`](docs/phase4a-exit-audit.md)
+- [`docs/validation/phase4a-validation.md`](docs/validation/phase4a-validation.md)
+- [`docs/demo/phase4a-authorization-guide.md`](docs/demo/phase4a-authorization-guide.md)
 
 ## License
 

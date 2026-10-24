@@ -21,4 +21,4 @@
 - Operators can diagnose execution state without reading rule/event/result payloads by default.
 - Authorization denial is stable and non-enumerating; cross-tenant objects are not distinguishable from absent objects.
 
-The complete role/action/object-state matrix will be converted into negative authorization tests before Phase 2 implementation begins.
+Phase 4A converts the implemented rounding workflow rows into executable same-tenant, wrong-role, absent-membership and cross-tenant tests. Export, artifact, webhook, metrics and operator-specific rows remain planned for later Phase 4/5 increments.

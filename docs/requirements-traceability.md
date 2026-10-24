@@ -8,13 +8,14 @@ The authoritative requirements remain in [`product/requirements.md`](product/req
 | Deterministic replay tuple | `domain/datasets.py`, `domain/simulation.py`, seeded scenario pack | Repeated dataset/result checksum test; integration replay | Phase 3 slice complete |
 | Baseline/candidate comparison | Worker application service, relational outcomes/impact | Rounding boundary/property tests; Playwright impact view | Financial Phase 3 dimension complete |
 | Versioned fail-closed risk policy | Seeded immutable policy and pure evaluator | Allow/block/error unit test; Playwright both outcomes | Phase 3 slice complete |
-| Separation of duties | Approval service validates author, checksum, policy and ETag | Incomplete, stale/substituted and self-approval integration cases | Phase 3 slice complete; full RBAC Phase 4 |
+| Separation of duties | JWT identity dependency, PostgreSQL memberships, approval/gate services | Wrong-role, self-approval, stale/substituted evidence and Playwright persona transitions | Phase 4A implemented actions complete |
 | Durable asynchronous simulation | Transactional simulation/outbox plus lease worker | Duplicate request, crash-after-claim and post-result redelivery | Phase 3 slice complete |
 | Stable versioned API behavior | `packages/contracts/openapi.json`, problem responses and ETags | OpenAPI reference validation; live UI/API path | Phase 3 operations implemented |
 | Protected mutation audit | Append-only `audit_events`; application role cannot update/delete | Migration grant/revoke and integration/live workflow | Phase 3 transitions complete |
 | Signature workflow UI-to-data | `App.tsx`, API/application/domain/worker/database path | Chromium allow/block critical flows | Phase 3 complete |
-| High threats and full tenant isolation | Phase 1 threat/control plans | Full negative authorization matrix | Deferred to Phase 4/5 |
+| Implemented-path tenant isolation | Auth dependency plus tenant-scoped application queries | Same-tenant allow; cross-tenant and absent-object equivalent 404; isolated audit lists | Phase 4A slice complete |
+| High threats and full-surface isolation | Phase 1 threat/control plans | Export/artifact/webhook/metrics/operator negative matrix | Remaining Phase 4/5 scope |
 
 ## Current gate
 
-Phase 3 passes local and clean-runner evidence. See [`phase3-exit-audit.md`](phase3-exit-audit.md) and [`validation/phase3-validation.md`](validation/phase3-validation.md). All five GitHub Actions pull-request jobs pass at hardening commit `b498c48`.
+Phase 3 passes local and clean-runner evidence. Phase 4A passes locally for the implemented authorization slice; clean-runner evidence remains pending branch push. See [`phase4a-exit-audit.md`](phase4a-exit-audit.md) and [`validation/phase4a-validation.md`](validation/phase4a-validation.md).

@@ -462,11 +462,13 @@ async def process_simulation_event(
                 SELECT baseline.rule AS baseline_rule, candidate.rule AS candidate_rule
                 FROM rule_versions baseline, rule_versions candidate
                 WHERE baseline.id=:baseline_id AND candidate.id=:candidate_id
+                  AND baseline.tenant_id=:tenant_id AND candidate.tenant_id=:tenant_id
                 """
                 ),
                 {
                     "baseline_id": simulation["baseline_rule_version_id"],
                     "candidate_id": simulation["candidate_rule_version_id"],
+                    "tenant_id": event.tenant_id,
                 },
             )
         )
@@ -619,7 +621,7 @@ async def get_simulation(
         .one_or_none()
     )
     if row is None:
-        raise ProblemError(404, "Not found", "Simulation was not found.", "not-found")
+        raise ProblemError(404, "Not found", "Resource not found.", "not-found")
     return dict(row)
 
 
@@ -648,7 +650,7 @@ async def get_impact(
         .one_or_none()
     )
     if row is None:
-        raise ProblemError(404, "Not found", "Simulation was not found.", "not-found")
+        raise ProblemError(404, "Not found", "Resource not found.", "not-found")
     if row["status"] != "completed":
         raise ProblemError(
             409, "Evidence incomplete", "Simulation has not completed.", "evidence-incomplete"
@@ -692,7 +694,7 @@ async def create_approval(
         .one_or_none()
     )
     if simulation is None:
-        raise ProblemError(404, "Not found", "Simulation was not found.", "not-found")
+        raise ProblemError(404, "Not found", "Resource not found.", "not-found")
     if simulation["status"] != "completed":
         raise ProblemError(
             409,
@@ -816,20 +818,19 @@ async def evaluate_gate(
         .one_or_none()
     )
     if evidence is None:
-        allow = False
-    else:
-        exact = (
-            evidence["status"] == "completed"
-            and evidence["result_checksum"] == result_checksum
-            and evidence["approval_checksum"] == result_checksum
-            and evidence["risk_policy_version_id"] == policy_id
-            and evidence["approval_policy_id"] == policy_id
-        )
-        allow = (
-            exact
-            and evidence["approval_decision"] == "approve"
-            and evidence["risk_decision"] == "allow"
-        )
+        raise ProblemError(404, "Not found", "Resource not found.", "not-found")
+    exact = (
+        evidence["status"] == "completed"
+        and evidence["result_checksum"] == result_checksum
+        and evidence["approval_checksum"] == result_checksum
+        and evidence["risk_policy_version_id"] == policy_id
+        and evidence["approval_policy_id"] == policy_id
+    )
+    allow = (
+        exact
+        and evidence["approval_decision"] == "approve"
+        and evidence["risk_decision"] == "allow"
+    )
     decision = "allow" if allow else "block"
     reasons = (
         ["Approval and policy allow the exact immutable evidence."]

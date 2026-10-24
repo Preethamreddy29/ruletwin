@@ -10,6 +10,6 @@ Do not open a public issue for a suspected vulnerability. Use GitHub's private v
 
 Do not include real customer, employer, credential or production data. RuleTwin development uses synthetic data only.
 
-## Phase 2 limitations
+## Current limitations
 
-The current foundation is not production-ready. Local synthetic identity is development-only, authorization enforcement is not yet implemented, and security controls described in Phase 1 remain planned until executable evidence exists.
+The application is not production-ready. Phase 4A uses short-lived signed tokens and server-resolved tenant RBAC, but its token-minting endpoint and identities are explicitly development-only. It is not an external identity provider or production OIDC integration. Authorization evidence currently covers the implemented rounding workflow, audit list, and two synthetic tenants; exports, artifacts, webhooks, operational telemetry isolation, rate limits, and the full Phase 4/5 matrix remain future work.

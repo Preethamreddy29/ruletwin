@@ -48,7 +48,7 @@ def create_app(settings: Settings, readiness_probe: ReadinessProbe | None = None
             "Content-Type",
             "Idempotency-Key",
             "If-Match",
-            "X-Actor-ID",
+            "Authorization",
             "X-Correlation-ID",
         ],
     )
@@ -107,21 +107,6 @@ def create_app(settings: Settings, readiness_probe: ReadinessProbe | None = None
     @app.get("/metrics", include_in_schema=False)
     async def metrics() -> Response:
         return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
-
-    @app.get("/v1/dev/session", tags=["development"], include_in_schema=False)
-    async def development_session() -> dict[str, object]:
-        if settings.environment not in {"dev", "test"}:
-            raise ProblemError(404, "Not found", "Resource not found.", "not-found")
-        return {
-            "user": {
-                "id": settings.synthetic_user_id,
-                "email": settings.synthetic_user_email,
-                "display_name": "NovaBill Analyst",
-            },
-            "tenant": {"slug": "novabill-sandbox", "display_name": "NovaBill Sandbox"},
-            "roles": ["author", "reviewer"],
-            "synthetic": True,
-        }
 
     app.include_router(vertical_slice_router)
 

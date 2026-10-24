@@ -17,7 +17,7 @@ From the repository root in PowerShell:
 ./scripts/dev.ps1 bootstrap
 ```
 
-This creates a repository-local `.venv`, installs Python and web dependencies, generates `.env` with local-only random credentials when absent, and preserves those credentials outside Git.
+This creates a repository-local `.venv`, installs Python and web dependencies, generates `.env` with local-only random database credentials and a 64-character JWT signing secret when absent, and preserves those values outside Git. Existing `.env` files are upgraded with a generated development JWT secret without replacing database credentials.
 
 ## Start and inspect
 
@@ -50,7 +50,7 @@ Prometheus is available at `http://localhost:9090`.
 ./scripts/dev.ps1 seed
 ```
 
-The command is deterministic and safe to rerun. It creates only the fictional NovaBill sandbox identity foundation.
+The command is deterministic and safe to rerun. It creates only the fictional NovaBill and Brightline sandbox tenants, their versioned 100-event datasets, and four single-role personas per tenant. It also normalizes the memberships of those synthetic users, but does not modify non-synthetic users.
 
 ## Checks
 

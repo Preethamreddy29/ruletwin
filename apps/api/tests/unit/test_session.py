@@ -1,23 +1,33 @@
 from httpx import ASGITransport, AsyncClient
 
 from ruletwin.api.app import create_app
+from ruletwin.api.auth import decode_token
 from ruletwin.config import Settings
+from ruletwin.scenario import AUTHOR_ID, TENANT_ID
 
 
-async def test_development_session_is_explicitly_synthetic(ready_client: AsyncClient) -> None:
-    response = await ready_client.get("/v1/dev/session")
+async def test_development_identities_and_signed_token_are_explicitly_synthetic(
+    ready_client: AsyncClient, settings: Settings
+) -> None:
+    identities = await ready_client.get("/v1/dev/identities")
+    assert identities.status_code == 200
+    assert len(identities.json()["items"]) == 8
+    assert {item["tenant"] for item in identities.json()["items"]} == {
+        "NovaBill Sandbox",
+        "Brightline Sandbox",
+    }
+
+    response = await ready_client.post("/v1/dev/token", json={"identity_key": "novabill-analyst"})
     assert response.status_code == 200
-    session = response.json()
-    assert session["synthetic"] is True
-    assert session["tenant"]["slug"] == "novabill-sandbox"
-    assert session["roles"] == ["author", "reviewer"]
+    assert decode_token(settings, response.json()["access_token"]) == (AUTHOR_ID, TENANT_ID)
 
 
-async def test_development_session_is_hidden_outside_dev() -> None:
+async def test_development_identity_endpoints_are_hidden_outside_dev() -> None:
     settings = Settings(
         environment="staging",
         database_url="postgresql+psycopg://test:test@localhost/ruletwin_test",
         log_level="CRITICAL",
+        jwt_secret="test-only-ruletwin-jwt-secret-000000000000",
     )
 
     async def ready() -> bool:
@@ -25,5 +35,5 @@ async def test_development_session_is_hidden_outside_dev() -> None:
 
     app = create_app(settings, readiness_probe=ready)
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
-        response = await client.get("/v1/dev/session")
+        response = await client.get("/v1/dev/identities")
     assert response.status_code == 404

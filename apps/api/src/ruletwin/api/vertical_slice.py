@@ -2,10 +2,11 @@ import uuid
 from datetime import date
 from typing import Annotated, Any, Literal
 
-from fastapi import APIRouter, Header, Request, Response, status
+from fastapi import APIRouter, Depends, Header, Request, Response, status
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import text
 
+from ruletwin.api.auth import Identity, authenticated_identity, issue_token, require_roles
 from ruletwin.api.problems import ProblemError
 from ruletwin.application.vertical_slice import (
     create_approval,
@@ -16,27 +17,33 @@ from ruletwin.application.vertical_slice import (
     get_impact,
     get_simulation,
 )
+from ruletwin.config import Settings
 from ruletwin.db.database import Database
 from ruletwin.domain.canonical import JsonValue
 from ruletwin.domain.datasets import EVENT_SCHEMA_VERSION, GENERATOR_VERSION
 from ruletwin.domain.simulation import ENGINE_VERSION
-from ruletwin.scenario import (
-    APPROVER_ID,
-    AUTHOR_ID,
-    BASELINE_RULE_VERSION_ID,
-    DATASET_ID,
-    POLICY_ID,
-    RULE_DEFINITION_ID,
-    TENANT_ID,
-)
+from ruletwin.scenario import IDENTITIES, TENANTS, identity_by_key
 
 router = APIRouter(prefix="/v1")
-ActorHeader = Annotated[uuid.UUID, Header(alias="X-Actor-ID")]
+AUTH_SCHEME = "bearer"
 IdempotencyHeader = Annotated[str, Header(alias="Idempotency-Key", min_length=16, max_length=128)]
+Authenticated = Annotated[Identity, Depends(authenticated_identity)]
+Author = Annotated[Identity, Depends(require_roles("author"))]
+AuthorOrReviewer = Annotated[Identity, Depends(require_roles("author", "reviewer"))]
+EvidenceReader = Annotated[
+    Identity, Depends(require_roles("author", "reviewer", "release_approver", "auditor"))
+]
+Reviewer = Annotated[Identity, Depends(require_roles("reviewer"))]
+ReleaseApprover = Annotated[Identity, Depends(require_roles("release_approver"))]
+AuditReader = Annotated[Identity, Depends(require_roles("reviewer", "release_approver", "auditor"))]
 
 
 class StrictModel(BaseModel):
     model_config = ConfigDict(extra="forbid")
+
+
+class DevTokenRequest(StrictModel):
+    identity_key: str = Field(min_length=1, max_length=80)
 
 
 class CreateRule(StrictModel):
@@ -88,33 +95,88 @@ def _correlation(request: Request) -> uuid.UUID:
     return uuid.UUID(request.state.request_id)
 
 
-async def _require_role(session: Any, actor_id: uuid.UUID, tenant_id: uuid.UUID, role: str) -> None:
-    allowed = await session.scalar(
-        text(
-            """
-            SELECT 1 FROM user_tenant_roles
-            WHERE user_id=:actor_id AND tenant_id=:tenant_id AND role_code=:role
-            """
-        ),
-        {"actor_id": actor_id, "tenant_id": tenant_id, "role": role},
-    )
-    if allowed is None:
+def _development_only(request: Request) -> Settings:
+    settings: Settings = request.app.state.settings
+    if settings.environment not in {"dev", "test"}:
         raise ProblemError(404, "Not found", "Resource not found.", "not-found")
+    return settings
 
 
-@router.get("/dev/scenario", tags=["development"], include_in_schema=False)
-async def scenario() -> dict[str, object]:
+def _session(identity: Identity) -> dict[str, object]:
     return {
-        "tenant_id": TENANT_ID,
-        "author_id": AUTHOR_ID,
-        "approver_id": APPROVER_ID,
-        "rule_definition_id": RULE_DEFINITION_ID,
-        "baseline_rule_version_id": BASELINE_RULE_VERSION_ID,
-        "dataset_manifest_id": DATASET_ID,
-        "risk_policy_version_id": POLICY_ID,
-        "engine_version": ENGINE_VERSION,
-        "generator_version": GENERATOR_VERSION,
-        "event_schema_version": EVENT_SCHEMA_VERSION,
+        "user": {
+            "id": identity.actor_id,
+            "email": identity.email,
+            "display_name": identity.display_name,
+        },
+        "tenant": {
+            "id": identity.tenant_id,
+            "slug": identity.tenant_slug,
+            "display_name": identity.tenant_display_name,
+        },
+        "roles": sorted(identity.roles),
+        "synthetic": True,
+    }
+
+
+@router.get("/dev/identities", tags=["development"], include_in_schema=False)
+async def development_identities(request: Request) -> dict[str, object]:
+    _development_only(request)
+    tenants = {tenant.id: tenant for tenant in TENANTS}
+    return {
+        "items": [
+            {
+                "key": identity.key,
+                "display_name": identity.display_name,
+                "tenant_id": identity.tenant_id,
+                "tenant": tenants[identity.tenant_id].display_name,
+                "role": identity.role,
+            }
+            for identity in IDENTITIES
+        ]
+    }
+
+
+@router.post("/dev/token", tags=["development"], include_in_schema=False)
+async def development_token(body: DevTokenRequest, request: Request) -> dict[str, object]:
+    settings = _development_only(request)
+    identity = identity_by_key(body.identity_key)
+    if identity is None:
+        raise ProblemError(404, "Not found", "Resource not found.", "not-found")
+    return {
+        "access_token": issue_token(settings, identity.id, identity.tenant_id),
+        "token_type": AUTH_SCHEME,
+        "expires_in": settings.jwt_ttl_seconds,
+    }
+
+
+@router.get("/dev/session", tags=["development"], include_in_schema=False)
+async def development_session(request: Request, identity: Authenticated) -> dict[str, object]:
+    _development_only(request)
+    return _session(identity)
+
+
+@router.get("/dev/scenarios", tags=["development"], include_in_schema=False)
+async def scenarios(request: Request) -> dict[str, object]:
+    _development_only(request)
+    return {
+        "items": [
+            {
+                "tenant_id": tenant.id,
+                "tenant_slug": tenant.slug,
+                "tenant_display_name": tenant.display_name,
+                "rule_definition_id": tenant.rule_definition_id,
+                "baseline_rule_version_id": tenant.baseline_rule_version_id,
+                "dataset_manifest_id": tenant.dataset_id,
+                "risk_policy_version_id": tenant.policy_id,
+                "engine_version": ENGINE_VERSION,
+                "generator_version": GENERATOR_VERSION,
+                "event_schema_version": EVENT_SCHEMA_VERSION,
+                "seed": 314159 if index == 0 else 271828,
+                "event_count": 100,
+            }
+            for index, tenant in enumerate(TENANTS)
+        ]
     }
 
 
@@ -124,23 +186,18 @@ async def post_rule_version(
     body: CreateRule,
     request: Request,
     response: Response,
-    actor_id: ActorHeader,
+    identity: Author,
     _idempotency_key: IdempotencyHeader,
 ) -> dict[str, Any]:
-    if tenant_id != TENANT_ID or body.effective_until is not None:
-        raise ProblemError(
-            422,
-            "Invalid rule",
-            "Phase 3 accepts the fixed tenant and open-ended rule only.",
-            "invalid-rule",
-        )
-    database = _database(request)
-    async with database.session() as session, session.begin():
-        await _require_role(session, actor_id, tenant_id, "author")
+    if tenant_id != identity.tenant_id:
+        raise ProblemError(404, "Not found", "Resource not found.", "not-found")
+    if body.effective_until is not None:
+        raise ProblemError(422, "Invalid rule", "Open-ended rules are required.", "invalid-rule")
+    async with _database(request).session() as session, session.begin():
         result = await create_rule_version(
             session,
-            tenant_id=tenant_id,
-            actor_id=actor_id,
+            tenant_id=identity.tenant_id,
+            actor_id=identity.actor_id,
             definition_id=body.definition_id,
             effective_from=body.effective_from,
             timezone=body.timezone,
@@ -155,18 +212,16 @@ async def post_rule_version(
 async def post_dataset(
     body: CreateDataset,
     request: Request,
-    actor_id: ActorHeader,
+    identity: AuthorOrReviewer,
     _idempotency_key: IdempotencyHeader,
 ) -> dict[str, Any]:
-    if body.tenant_id != TENANT_ID:
+    if body.tenant_id != identity.tenant_id:
         raise ProblemError(404, "Not found", "Resource not found.", "not-found")
-    database = _database(request)
-    async with database.session() as session, session.begin():
-        await _require_role(session, actor_id, body.tenant_id, "author")
+    async with _database(request).session() as session, session.begin():
         return await create_dataset(
             session,
-            tenant_id=body.tenant_id,
-            actor_id=actor_id,
+            tenant_id=identity.tenant_id,
+            actor_id=identity.actor_id,
             seed=body.seed,
             event_count=body.event_count,
             correlation_id=_correlation(request),
@@ -178,18 +233,16 @@ async def post_simulation(
     body: CreateSimulation,
     request: Request,
     response: Response,
-    actor_id: ActorHeader,
+    identity: AuthorOrReviewer,
     idempotency_key: IdempotencyHeader,
 ) -> dict[str, Any]:
-    if body.tenant_id != TENANT_ID:
+    if body.tenant_id != identity.tenant_id:
         raise ProblemError(404, "Not found", "Resource not found.", "not-found")
-    database = _database(request)
-    async with database.session() as session, session.begin():
-        await _require_role(session, actor_id, body.tenant_id, "author")
+    async with _database(request).session() as session, session.begin():
         result, _ = await create_simulation(
             session,
-            tenant_id=body.tenant_id,
-            actor_id=actor_id,
+            tenant_id=identity.tenant_id,
+            actor_id=identity.actor_id,
             baseline_id=body.baseline_rule_version_id,
             candidate_id=body.candidate_rule_version_id,
             dataset_id=body.dataset_manifest_id,
@@ -204,20 +257,20 @@ async def post_simulation(
 
 @router.get("/simulations/{simulation_id}")
 async def read_simulation(
-    simulation_id: uuid.UUID, request: Request, response: Response
+    simulation_id: uuid.UUID, request: Request, response: Response, identity: EvidenceReader
 ) -> dict[str, Any]:
-    database = _database(request)
-    async with database.session() as session:
-        result = await get_simulation(session, simulation_id, TENANT_ID)
+    async with _database(request).session() as session:
+        result = await get_simulation(session, simulation_id, identity.tenant_id)
     response.headers["ETag"] = f'"{result["version"]}"'
     return result
 
 
 @router.get("/simulations/{simulation_id}/impact")
-async def read_impact(simulation_id: uuid.UUID, request: Request) -> dict[str, Any]:
-    database = _database(request)
-    async with database.session() as session:
-        return await get_impact(session, simulation_id, TENANT_ID)
+async def read_impact(
+    simulation_id: uuid.UUID, request: Request, identity: EvidenceReader
+) -> dict[str, Any]:
+    async with _database(request).session() as session:
+        return await get_impact(session, simulation_id, identity.tenant_id)
 
 
 @router.post("/simulations/{simulation_id}/approvals", status_code=status.HTTP_201_CREATED)
@@ -225,7 +278,7 @@ async def post_approval(
     simulation_id: uuid.UUID,
     body: CreateApproval,
     request: Request,
-    actor_id: ActorHeader,
+    identity: Reviewer,
     idempotency_key: IdempotencyHeader,
     if_match: Annotated[str, Header(alias="If-Match")],
 ) -> dict[str, Any]:
@@ -235,14 +288,12 @@ async def post_approval(
         raise ProblemError(
             409, "Stale evidence", "If-Match must be the current version ETag.", "stale-evidence"
         ) from exc
-    database = _database(request)
-    async with database.session() as session, session.begin():
-        await _require_role(session, actor_id, TENANT_ID, "reviewer")
+    async with _database(request).session() as session, session.begin():
         return await create_approval(
             session,
             simulation_id=simulation_id,
-            tenant_id=TENANT_ID,
-            reviewer_id=actor_id,
+            tenant_id=identity.tenant_id,
+            reviewer_id=identity.actor_id,
             result_checksum=body.result_checksum,
             policy_id=body.policy_version_id,
             decision=body.decision,
@@ -257,16 +308,14 @@ async def post_approval(
 async def post_gate(
     body: EvaluateGate,
     request: Request,
-    actor_id: ActorHeader,
+    identity: ReleaseApprover,
     _idempotency_key: IdempotencyHeader,
 ) -> dict[str, Any]:
-    database = _database(request)
-    async with database.session() as session, session.begin():
-        await _require_role(session, actor_id, TENANT_ID, "release_approver")
+    async with _database(request).session() as session, session.begin():
         return await evaluate_gate(
             session,
-            tenant_id=TENANT_ID,
-            actor_id=actor_id,
+            tenant_id=identity.tenant_id,
+            actor_id=identity.actor_id,
             simulation_id=body.simulation_id,
             approval_id=body.approval_id,
             result_checksum=body.result_checksum,
@@ -276,23 +325,22 @@ async def post_gate(
 
 
 @router.get("/audit-events")
-async def read_audit_events(request: Request, limit: int = 50) -> dict[str, object]:
+async def read_audit_events(
+    request: Request, identity: AuditReader, limit: int = 50
+) -> dict[str, object]:
     if not 1 <= limit <= 200:
         raise ProblemError(
             422, "Validation failed", "limit must be from 1 through 200.", "validation-failed"
         )
-    database = _database(request)
-    async with database.session() as session:
+    async with _database(request).session() as session:
         rows = (
             (
                 await session.execute(
-                    text(
-                        """
-                    SELECT * FROM audit_events WHERE tenant_id=:tenant_id
-                    ORDER BY created_at DESC, id DESC LIMIT :limit
-                    """
-                    ),
-                    {"tenant_id": TENANT_ID, "limit": limit},
+                    text("""
+                        SELECT * FROM audit_events WHERE tenant_id=:tenant_id
+                        ORDER BY created_at DESC, id DESC LIMIT :limit
+                    """),
+                    {"tenant_id": identity.tenant_id, "limit": limit},
                 )
             )
             .mappings()
