@@ -1,10 +1,10 @@
 # Phase 4A Validation Evidence
 
-**Date:** 2026-10-24
-
-**Branch:** `codex/phase4a-multitenant-authorization`
-
-**Base:** Phase 3 merge `5a13a3e`
+**Date:** 2026-10-24  
+**Original branch:** `codex/phase4a-multitenant-authorization`  
+**Phase 3 base:** `5a13a3e`  
+**Merged result:** PR #18 at `cffdb30`  
+**Current verified main:** `d64275f`
 
 ## Automated results
 
@@ -13,8 +13,8 @@
 | Ruff format/lint and strict mypy | Pass |
 | OpenAPI reference validation | Pass |
 | Repository secret scan | Pass |
-| Python dependency vulnerability audit | Pass — no known vulnerabilities |
-| Bandit static security scan | Pass — no findings |
+| Python dependency vulnerability audit | Pass — no known vulnerabilities in the validated run |
+| Bandit static security scan | Pass — no findings in the validated run |
 | PostgreSQL migration downgrade/upgrade and Alembic drift | Pass — zero drift |
 | Python tests | Pass — 46 |
 | Python measured coverage | Pass — 93.56% |
@@ -22,7 +22,7 @@
 | Web measured statement coverage | Pass — 88.14% |
 | TypeScript and production build | Pass |
 | Compose image build and Phase 3-volume upgrade seed | Pass |
-| Playwright Chromium multi-persona workflow | Pass — allow and block paths plus cross-tenant denial |
+| Playwright Chromium multi-persona workflow | Pass — allow, block, and cross-tenant denial paths |
 
 ## Authorization evidence
 
@@ -43,4 +43,10 @@
 - Zero outbox events remained unprocessed.
 - API and worker logs contained no application errors during the verified flow.
 
-Clean-runner GitHub Actions evidence must be recorded after a pull request runs the protected checks.
+## Clean-runner evidence
+
+- PR #18 validation workflow passed all five required checks before merge.
+- The post-merge main workflow passed all five required checks at `cffdb30`.
+- Main CI passed all five required checks again at `d64275f` after the Gitleaks action upgrade.
+
+This closes the previously pending clean-runner evidence item. These results support Phase 4A only and do not prove the controlled-pilot gates in [`docs/pilot-readiness-plan.md`](../pilot-readiness-plan.md).
