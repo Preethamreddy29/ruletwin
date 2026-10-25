@@ -1,6 +1,6 @@
 # Authorization and Tenant-Isolation Matrix
 
-Every row is a server-side decision requiring same-tenant allow tests plus cross-tenant, wrong-role, absent-membership and stale-state denial tests. Phase 4A implements the existing rule creation, dataset/simulation creation, simulation/impact reads, review, gate, and audit-list rows. Rows for rule diff, export/reproduction, artifacts, operations and webhooks remain planned.
+Every row is a server-side decision requiring same-tenant allow tests plus cross-tenant, wrong-role, absent-membership and stale-state denial tests. Phase 4A implements the existing rule creation, dataset/simulation creation, simulation/impact reads, review, gate, and audit-list rows. The first controlled-pilot increment adds the evidence-export row for completed simulations. Rows for rule diff, evidence reproduction, artifacts, operations and webhooks remain planned or disabled.
 
 | Resource/action | Analyst | QA reviewer | Release approver | Auditor | Operator | Object/state rule |
 |---|---:|---:|---:|---:|---:|---|
@@ -12,7 +12,8 @@ Every row is a server-side decision requiring same-tenant allow tests plus cross
 | Submit approval | Deny | Allow | Deny | Deny | Deny | Reviewer differs from candidate author; current exact evidence |
 | Evaluate release gate | Deny | Deny | Allow | Deny | Deny | Current approval and policy/evidence tuple required |
 | List audit events | Own actions only | Relevant tenant | Relevant tenant | Allow | Operational metadata | Tenant scope and cursor/filter authorization |
-| Export/reproduce evidence | Deny | Allow | Allow | Allow | Deny | Tenant scope; immutable tuple; export audit required |
+| Export completed-simulation evidence | Deny | Allow | Allow | Allow | Deny | Tenant scope; completed result; immutable checksums; export audit required |
+| Reproduce exported evidence | Deny | Planned | Planned | Planned | Deny | Not exposed until deterministic import/replay verification is implemented |
 | Claim/complete worker job | Deny | Deny | Deny | Deny | Service identity only | Lease, tenant context and exact tuple propagated |
 | Read artifact | Relevant tenant | Relevant tenant | Relevant tenant | Relevant tenant | Deny | Parent-object authorization precedes content access |
 | Read metrics/logs | Deny | Deny | Deny | Deny | Allow redacted | No tenant payload or unbounded tenant identifier label |

@@ -11,6 +11,7 @@ REQUIRED_PATHS = {
     "/v1/simulations",
     "/v1/simulations/{simulation_id}",
     "/v1/simulations/{simulation_id}/approvals",
+    "/v1/simulations/{simulation_id}/evidence-export",
     "/v1/simulations/{simulation_id}/impact",
     "/v1/tenants/{tenant_id}/rule-versions",
 }
@@ -41,8 +42,8 @@ def main() -> int:
         for method in ("get", "post", "put", "patch", "delete"):
             if method in path_item:
                 operation_ids.append(path_item[method]["operationId"])
-    assert len(operation_ids) == 10
-    assert len(set(operation_ids)) == 10
+    assert len(operation_ids) == 11
+    assert len(set(operation_ids)) == 11
     references = walk_references(specification)
     for reference in references:
         assert reference.startswith("#/"), reference

@@ -94,6 +94,24 @@
         }
       }
     },
+    "/v1/simulations/{simulation_id}/evidence-export": {
+      "get": {
+        "operationId": "exportSimulationEvidence",
+        "parameters": [{"$ref": "#/components/parameters/SimulationId"}, {"$ref": "#/components/parameters/CorrelationId"}],
+        "responses": {
+          "200": {
+            "description": "Tenant-authorized, checksum-verifiable evidence bundle",
+            "headers": {
+              "ETag": {"$ref": "#/components/headers/ETag"},
+              "Content-Disposition": {"schema": {"type": "string"}}
+            },
+            "content": {"application/json": {"schema": {"$ref": "#/components/schemas/EvidenceExport"}}}
+          },
+          "404": {"$ref": "#/components/responses/NotFound"},
+          "409": {"$ref": "#/components/responses/Conflict"}
+        }
+      }
+    },
     "/v1/simulations/{simulation_id}/approvals": {
       "post": {
         "operationId": "submitSimulationApproval",
@@ -176,6 +194,28 @@
       "Simulation": {"allOf": [{"$ref": "#/components/schemas/CreateSimulation"}, {"type": "object", "required": ["id", "status", "version", "requested_by", "created_at"], "properties": {"id": {"$ref": "#/components/schemas/Uuid"}, "status": {"type": "string", "enum": ["requested", "queued", "running", "completed", "failed", "cancelled"]}, "version": {"type": "integer", "minimum": 1}, "result_checksum": {"oneOf": [{"$ref": "#/components/schemas/Checksum"}, {"type": "null"}]}, "requested_by": {"$ref": "#/components/schemas/Uuid"}, "created_at": {"type": "string", "format": "date-time"}}}]},
       "RiskEvaluation": {"type": "object", "required": ["policy_version_id", "decision", "reasons", "checksum"], "properties": {"policy_version_id": {"$ref": "#/components/schemas/Uuid"}, "decision": {"type": "string", "enum": ["allow", "block", "error"]}, "reasons": {"type": "array", "items": {"type": "string"}}, "checksum": {"$ref": "#/components/schemas/Checksum"}}},
       "ImpactReport": {"type": "object", "required": ["simulation_id", "result_checksum", "impact_checksum", "summary", "risk"], "properties": {"simulation_id": {"$ref": "#/components/schemas/Uuid"}, "result_checksum": {"$ref": "#/components/schemas/Checksum"}, "impact_checksum": {"$ref": "#/components/schemas/Checksum"}, "summary": {"type": "object", "required": ["event_count", "changed_event_count", "unchanged_event_count", "total_financial_delta_minor_units", "maximum_financial_delta_minor_units", "currency"]}, "risk": {"$ref": "#/components/schemas/RiskEvaluation"}}},
+      "EvidenceExport": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["export_checksum", "evidence"],
+        "properties": {
+          "export_checksum": {"$ref": "#/components/schemas/Checksum"},
+          "evidence": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["schema_version", "tenant_id", "simulation", "inputs", "impact", "approval", "release_gate"],
+            "properties": {
+              "schema_version": {"type": "string", "const": "ruletwin-evidence-export-v1"},
+              "tenant_id": {"$ref": "#/components/schemas/Uuid"},
+              "simulation": {"type": "object"},
+              "inputs": {"type": "object"},
+              "impact": {"type": "object"},
+              "approval": {"type": ["object", "null"]},
+              "release_gate": {"type": ["object", "null"]}
+            }
+          }
+        }
+      },
       "CreateApproval": {"type": "object", "additionalProperties": false, "required": ["result_checksum", "policy_version_id", "decision"], "properties": {"result_checksum": {"$ref": "#/components/schemas/Checksum"}, "policy_version_id": {"$ref": "#/components/schemas/Uuid"}, "decision": {"type": "string", "enum": ["approve", "reject"]}, "rationale": {"type": "string", "maxLength": 2000}}},
       "Approval": {"allOf": [{"$ref": "#/components/schemas/CreateApproval"}, {"type": "object", "required": ["id", "simulation_id", "reviewer_id", "created_at"], "properties": {"id": {"$ref": "#/components/schemas/Uuid"}, "simulation_id": {"$ref": "#/components/schemas/Uuid"}, "reviewer_id": {"$ref": "#/components/schemas/Uuid"}, "created_at": {"type": "string", "format": "date-time"}}}]},
       "EvaluateGate": {"type": "object", "additionalProperties": false, "required": ["simulation_id", "approval_id", "result_checksum", "policy_version_id"], "properties": {"simulation_id": {"$ref": "#/components/schemas/Uuid"}, "approval_id": {"$ref": "#/components/schemas/Uuid"}, "result_checksum": {"$ref": "#/components/schemas/Checksum"}, "policy_version_id": {"$ref": "#/components/schemas/Uuid"}}},

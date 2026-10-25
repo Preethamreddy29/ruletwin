@@ -669,6 +669,149 @@ async def get_impact(
     }
 
 
+async def export_evidence(
+    session: AsyncSession,
+    *,
+    simulation_id: uuid.UUID,
+    tenant_id: uuid.UUID,
+    actor_id: uuid.UUID,
+    correlation_id: uuid.UUID,
+) -> dict[str, Any]:
+    row = (
+        (
+            await session.execute(
+                text(
+                    """
+                    SELECT s.id, s.tenant_id, s.baseline_rule_version_id,
+                           s.candidate_rule_version_id, s.dataset_manifest_id,
+                           s.engine_version, s.risk_policy_version_id, s.status,
+                           s.version, s.requested_by, s.result_checksum,
+                           s.created_at, s.completed_at,
+                           baseline.checksum AS baseline_rule_checksum,
+                           candidate.checksum AS candidate_rule_checksum,
+                           dataset.checksum AS dataset_checksum,
+                           impact.summary, impact.checksum AS impact_checksum,
+                           risk.decision AS risk_decision,
+                           risk.reasons AS risk_reasons,
+                           risk.checksum AS risk_checksum,
+                           approval.id AS approval_id,
+                           approval.reviewer_id, approval.decision AS approval_decision,
+                           approval.rationale, approval.result_checksum AS approval_checksum,
+                           approval.policy_version_id AS approval_policy_id,
+                           approval.created_at AS approval_created_at,
+                           gate.id AS gate_id, gate.decision AS gate_decision,
+                           gate.evidence_checksum AS gate_evidence_checksum,
+                           gate.reasons AS gate_reasons, gate.created_at AS gate_created_at
+                    FROM simulations s
+                    JOIN rule_versions baseline
+                      ON baseline.id=s.baseline_rule_version_id
+                     AND baseline.tenant_id=s.tenant_id
+                    JOIN rule_versions candidate
+                      ON candidate.id=s.candidate_rule_version_id
+                     AND candidate.tenant_id=s.tenant_id
+                    JOIN dataset_manifests dataset
+                      ON dataset.id=s.dataset_manifest_id
+                     AND dataset.tenant_id=s.tenant_id
+                    LEFT JOIN impact_deltas impact
+                      ON impact.simulation_id=s.id AND impact.tenant_id=s.tenant_id
+                    LEFT JOIN risk_evaluations risk
+                      ON risk.simulation_id=s.id AND risk.tenant_id=s.tenant_id
+                    LEFT JOIN LATERAL (
+                        SELECT a.* FROM approvals a
+                        WHERE a.simulation_id=s.id AND a.tenant_id=s.tenant_id
+                        ORDER BY a.created_at DESC, a.id DESC
+                        LIMIT 1
+                    ) approval ON TRUE
+                    LEFT JOIN release_gates gate
+                      ON gate.simulation_id=s.id
+                     AND gate.approval_id=approval.id
+                     AND gate.tenant_id=s.tenant_id
+                    WHERE s.id=:id AND s.tenant_id=:tenant_id
+                    """
+                ),
+                {"id": simulation_id, "tenant_id": tenant_id},
+            )
+        )
+        .mappings()
+        .one_or_none()
+    )
+    if row is None:
+        raise ProblemError(404, "Not found", "Resource not found.", "not-found")
+    if row["status"] != "completed" or row["impact_checksum"] is None:
+        raise ProblemError(
+            409, "Evidence incomplete", "Simulation has not completed.", "evidence-incomplete"
+        )
+
+    approval = None
+    if row["approval_id"] is not None:
+        approval = {
+            "id": str(row["approval_id"]),
+            "reviewer_id": str(row["reviewer_id"]),
+            "decision": row["approval_decision"],
+            "rationale": row["rationale"],
+            "result_checksum": row["approval_checksum"],
+            "policy_version_id": str(row["approval_policy_id"]),
+            "created_at": row["approval_created_at"].isoformat(),
+        }
+
+    release_gate = None
+    if row["gate_id"] is not None:
+        release_gate = {
+            "id": str(row["gate_id"]),
+            "decision": row["gate_decision"],
+            "evidence_checksum": row["gate_evidence_checksum"],
+            "reasons": row["gate_reasons"],
+            "created_at": row["gate_created_at"].isoformat(),
+        }
+
+    evidence: dict[str, JsonValue] = {
+        "schema_version": "ruletwin-evidence-export-v1",
+        "tenant_id": str(row["tenant_id"]),
+        "simulation": {
+            "id": str(row["id"]),
+            "status": row["status"],
+            "version": row["version"],
+            "engine_version": row["engine_version"],
+            "requested_by": str(row["requested_by"]),
+            "result_checksum": row["result_checksum"],
+            "created_at": row["created_at"].isoformat(),
+            "completed_at": row["completed_at"].isoformat(),
+        },
+        "inputs": {
+            "baseline_rule_version_id": str(row["baseline_rule_version_id"]),
+            "baseline_rule_checksum": row["baseline_rule_checksum"],
+            "candidate_rule_version_id": str(row["candidate_rule_version_id"]),
+            "candidate_rule_checksum": row["candidate_rule_checksum"],
+            "dataset_manifest_id": str(row["dataset_manifest_id"]),
+            "dataset_checksum": row["dataset_checksum"],
+            "risk_policy_version_id": str(row["risk_policy_version_id"]),
+        },
+        "impact": {
+            "checksum": row["impact_checksum"],
+            "summary": row["summary"],
+            "risk": {
+                "decision": row["risk_decision"],
+                "reasons": row["risk_reasons"],
+                "checksum": row["risk_checksum"],
+            },
+        },
+        "approval": approval,
+        "release_gate": release_gate,
+    }
+    export_checksum = checksum(evidence)
+    await append_audit(
+        session,
+        tenant_id=tenant_id,
+        actor_id=actor_id,
+        action="evidence.exported",
+        object_type="simulation",
+        object_id=simulation_id,
+        correlation_id=correlation_id,
+        metadata={"export_checksum": export_checksum},
+    )
+    return {"export_checksum": export_checksum, "evidence": evidence}
+
+
 async def create_approval(
     session: AsyncSession,
     *,
