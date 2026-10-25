@@ -2,7 +2,7 @@
 
 RuleTwin is a deterministic, tenant-aware change-impact simulator for proposed business-rule changes. It replays synthetic events through baseline and candidate rule versions, compares outcomes, applies a versioned risk policy, and produces reproducible approval evidence.
 
-> **Current state:** Phase 4A is merged into `main` at `cffdb30`. Protected clean-runner CI passed for the Phase 4A merge and again at `d64275f` after the Gitleaks action upgrade. RuleTwin is a validated synthetic-data pilot candidate, not a production-ready service.
+> **Current state:** Tenant authorization and deterministic evidence export are merged through PR #21 at `257e604`, with protected clean-runner CI passing. A provider-neutral OIDC verification foundation is under development. RuleTwin is a validated synthetic-data pilot candidate, not a production-ready service.
 
 ## Product boundary
 
@@ -12,9 +12,9 @@ The portfolio index and governing sources are maintained in the sibling `enterpr
 
 ## Current milestone
 
-Phase 4A preserves the deterministic rounding workflow while adding two synthetic tenants, short-lived signed development identities, PostgreSQL-resolved memberships, role-separated analyst/reviewer/release-approver/auditor actions, object-level authorization, and non-enumerating cross-tenant denial. The UI makes the identity and tenant boundary directly demonstrable while Playwright validates allow, block, and cross-tenant-denial paths.
+The implemented workflow preserves deterministic simulation while adding two synthetic tenants, short-lived signed development identities, PostgreSQL-resolved memberships, role-separated analyst/reviewer/release-approver/auditor actions, object-level authorization, non-enumerating cross-tenant denial, and checksum-bound JSON evidence export.
 
-The next milestone is controlled-pilot readiness. Its scope, exclusions, required evidence, and user decisions are defined in [`docs/pilot-readiness-plan.md`](docs/pilot-readiness-plan.md). Production OIDC, full-surface isolation, recovery evidence, deployment automation, operational alerting, resource controls, and measured performance remain required before an externally hosted pilot.
+The next milestone is controlled-pilot readiness. Its scope, exclusions, required evidence, and user decisions are defined in [`docs/pilot-readiness-plan.md`](docs/pilot-readiness-plan.md). Provider connection and login/logout, full-surface isolation, recovery evidence, deployment automation, operational alerting, resource controls, and measured performance remain required before an externally hosted pilot.
 
 ## Run locally
 
@@ -50,10 +50,11 @@ Start with:
 - [`docs/validation/phase3-validation.md`](docs/validation/phase3-validation.md)
 - [`docs/phase4a-exit-audit.md`](docs/phase4a-exit-audit.md)
 - [`docs/validation/phase4a-validation.md`](docs/validation/phase4a-validation.md)
+- [`docs/validation/pilot-oidc-foundation-validation.md`](docs/validation/pilot-oidc-foundation-validation.md)
 
 ## Security and limitations
 
-RuleTwin remains pre-release. The development identity endpoint is not production authentication, only implemented API/UI paths have executable tenant-isolation evidence, and only synthetic data is approved. See [`SECURITY.md`](SECURITY.md) and the pilot-readiness plan before deployment.
+RuleTwin remains pre-release. Development identities are local-only, the OIDC foundation is not a completed provider login integration, only implemented API/UI paths have executable tenant-isolation evidence, and only synthetic data is approved. See [`SECURITY.md`](SECURITY.md) and the pilot-readiness plan before deployment.
 
 ## License
 

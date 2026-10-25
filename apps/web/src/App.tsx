@@ -119,7 +119,7 @@ export function App() {
         body: JSON.stringify({ identity_key: key }),
       })
     ).body;
-    const active = (await api<SessionResponse>("/v1/dev/session", issued.access_token)).body;
+    const active = (await api<SessionResponse>("/v1/session", issued.access_token)).body;
     setIdentityKey(key);
     setToken(issued.access_token);
     setSession(active);

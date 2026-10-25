@@ -8,6 +8,16 @@
   "servers": [{"url": "http://localhost:8000", "description": "Local development server"}],
   "security": [{"bearerAuth": []}],
   "paths": {
+    "/v1/session": {
+      "get": {
+        "operationId": "getActiveSession",
+        "parameters": [{"$ref": "#/components/parameters/CorrelationId"}],
+        "responses": {
+          "200": {"description": "Authenticated user, active tenant and database-resolved roles", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Session"}}}},
+          "404": {"$ref": "#/components/responses/NotFound"}
+        }
+      }
+    },
     "/v1/tenants/{tenant_id}/rule-versions": {
       "post": {
         "operationId": "createRuleVersion",
@@ -173,6 +183,17 @@
     "schemas": {
       "Uuid": {"type": "string", "format": "uuid"},
       "Checksum": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+      "Session": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["user", "tenant", "roles", "synthetic"],
+        "properties": {
+          "user": {"type": "object", "additionalProperties": false, "required": ["id", "email", "display_name"], "properties": {"id": {"$ref": "#/components/schemas/Uuid"}, "email": {"type": "string", "format": "email"}, "display_name": {"type": "string"}}},
+          "tenant": {"type": "object", "additionalProperties": false, "required": ["id", "slug", "display_name"], "properties": {"id": {"$ref": "#/components/schemas/Uuid"}, "slug": {"type": "string"}, "display_name": {"type": "string"}}},
+          "roles": {"type": "array", "uniqueItems": true, "items": {"type": "string", "enum": ["author", "reviewer", "release_approver", "auditor"]}},
+          "synthetic": {"type": "boolean"}
+        }
+      },
       "CreateRuleVersion": {
         "type": "object", "additionalProperties": false,
         "required": ["definition_id", "family", "effective_from", "timezone", "rule", "dependency_version_ids"],

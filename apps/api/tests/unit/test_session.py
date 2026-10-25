@@ -27,7 +27,10 @@ async def test_development_identity_endpoints_are_hidden_outside_dev() -> None:
         environment="staging",
         database_url="postgresql+psycopg://test:test@localhost/ruletwin_test",
         log_level="CRITICAL",
-        jwt_secret="test-only-ruletwin-jwt-secret-000000000000",
+        auth_mode="oidc",
+        oidc_issuer="https://identity.example/",
+        oidc_audience="ruletwin-api",
+        oidc_jwks_url="https://identity.example/.well-known/jwks.json",
     )
 
     async def ready() -> bool:
@@ -35,5 +38,6 @@ async def test_development_identity_endpoints_are_hidden_outside_dev() -> None:
 
     app = create_app(settings, readiness_probe=ready)
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
-        response = await client.get("/v1/dev/identities")
-    assert response.status_code == 404
+        identities = await client.get("/v1/dev/identities")
+        token = await client.post("/v1/dev/token", json={"identity_key": "novabill-analyst"})
+    assert identities.status_code == token.status_code == 404

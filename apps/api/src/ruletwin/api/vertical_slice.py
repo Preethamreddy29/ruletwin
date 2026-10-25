@@ -101,12 +101,12 @@ def _correlation(request: Request) -> uuid.UUID:
 
 def _development_only(request: Request) -> Settings:
     settings: Settings = request.app.state.settings
-    if settings.environment not in {"dev", "test"}:
+    if settings.environment not in {"dev", "test"} or settings.auth_mode != "development":
         raise ProblemError(404, "Not found", "Resource not found.", "not-found")
     return settings
 
 
-def _session(identity: Identity) -> dict[str, object]:
+def _session(identity: Identity, *, synthetic: bool) -> dict[str, object]:
     return {
         "user": {
             "id": identity.actor_id,
@@ -119,7 +119,7 @@ def _session(identity: Identity) -> dict[str, object]:
             "display_name": identity.tenant_display_name,
         },
         "roles": sorted(identity.roles),
-        "synthetic": True,
+        "synthetic": synthetic,
     }
 
 
@@ -157,7 +157,13 @@ async def development_token(body: DevTokenRequest, request: Request) -> dict[str
 @router.get("/dev/session", tags=["development"], include_in_schema=False)
 async def development_session(request: Request, identity: Authenticated) -> dict[str, object]:
     _development_only(request)
-    return _session(identity)
+    return _session(identity, synthetic=True)
+
+
+@router.get("/session", tags=["identity"])
+async def active_session(request: Request, identity: Authenticated) -> dict[str, object]:
+    settings: Settings = request.app.state.settings
+    return _session(identity, synthetic=settings.auth_mode == "development")
 
 
 @router.get("/dev/scenarios", tags=["development"], include_in_schema=False)
