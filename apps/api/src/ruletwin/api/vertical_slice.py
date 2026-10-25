@@ -14,6 +14,7 @@ from ruletwin.application.vertical_slice import (
     create_rule_version,
     create_simulation,
     evaluate_gate,
+    export_evidence,
     get_impact,
     get_simulation,
 )
@@ -36,6 +37,9 @@ EvidenceReader = Annotated[
 Reviewer = Annotated[Identity, Depends(require_roles("reviewer"))]
 ReleaseApprover = Annotated[Identity, Depends(require_roles("release_approver"))]
 AuditReader = Annotated[Identity, Depends(require_roles("reviewer", "release_approver", "auditor"))]
+EvidenceExporter = Annotated[
+    Identity, Depends(require_roles("reviewer", "release_approver", "auditor"))
+]
 
 
 class StrictModel(BaseModel):
@@ -271,6 +275,28 @@ async def read_impact(
 ) -> dict[str, Any]:
     async with _database(request).session() as session:
         return await get_impact(session, simulation_id, identity.tenant_id)
+
+
+@router.get("/simulations/{simulation_id}/evidence-export")
+async def read_evidence_export(
+    simulation_id: uuid.UUID,
+    request: Request,
+    response: Response,
+    identity: EvidenceExporter,
+) -> dict[str, Any]:
+    async with _database(request).session() as session, session.begin():
+        result = await export_evidence(
+            session,
+            simulation_id=simulation_id,
+            tenant_id=identity.tenant_id,
+            actor_id=identity.actor_id,
+            correlation_id=_correlation(request),
+        )
+    response.headers["Content-Disposition"] = (
+        f'attachment; filename="ruletwin-evidence-{simulation_id}.json"'
+    )
+    response.headers["ETag"] = f'"{result["export_checksum"]}"'
+    return result
 
 
 @router.post("/simulations/{simulation_id}/approvals", status_code=status.HTTP_201_CREATED)

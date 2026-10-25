@@ -65,6 +65,11 @@ function roleFor(key: string) {
 function installFetch() {
   let simulationReads = 0;
   vi.stubGlobal("crypto", { randomUUID: () => "88888888-8888-4888-8888-888888888888" });
+  vi.stubGlobal("URL", {
+    createObjectURL: vi.fn(() => "blob:ruletwin-evidence"),
+    revokeObjectURL: vi.fn(),
+  });
+  vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => undefined);
   vi.stubGlobal(
     "fetch",
     vi.fn().mockImplementation((path: string, init?: RequestInit) => {
@@ -117,6 +122,15 @@ function installFetch() {
             reasons: ["Threshold exceeded."],
           },
         });
+      if (path.endsWith("/evidence-export"))
+        return response({
+          export_checksum: `sha256:${"e".repeat(64)}`,
+          evidence: {
+            schema_version: "ruletwin-evidence-export-v1",
+            tenant_id: tenantA,
+            simulation: { id: "simulation" },
+          },
+        });
       if (path.endsWith("/approvals")) return response({ id: "approval" });
       if (path.endsWith("/release-gates/evaluate"))
         return response({
@@ -166,6 +180,8 @@ describe("App", () => {
     });
     fireEvent.click(await screen.findByRole("button", { name: "Approve evidence as QA" }));
     expect(await screen.findByRole("button", { name: "Evidence reviewed" })).toBeDisabled();
+    fireEvent.click(screen.getByRole("button", { name: "Download evidence bundle" }));
+    expect(await screen.findByText(/Evidence bundle ready/)).toBeInTheDocument();
 
     fireEvent.change(screen.getByLabelText("Active synthetic persona"), {
       target: { value: "novabill-approver" },

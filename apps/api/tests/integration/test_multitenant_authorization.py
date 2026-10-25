@@ -122,6 +122,12 @@ async def test_multitenant_role_and_object_authorization_matrix() -> None:
                 headers=_headers(tokens["reviewer"]),
             )
             assert same_tenant.status_code == 200
+            incomplete_export = await client.get(
+                f"/v1/simulations/{simulation_id}/evidence-export",
+                headers=_headers(tokens["reviewer"]),
+            )
+            assert incomplete_export.status_code == 409
+            assert incomplete_export.json()["code"] == "evidence-incomplete"
 
             async with database.session() as session, session.begin():
                 claimed = await claim_one(session, lease_owner="authz-worker", lease_seconds=30)
@@ -141,6 +147,16 @@ async def test_multitenant_role_and_object_authorization_matrix() -> None:
                 headers=_headers(tokens["reviewer"]),
             )
             assert completed.status_code == impact.status_code == 200
+
+            denied_author_export = await client.get(
+                f"/v1/simulations/{simulation_id}/evidence-export",
+                headers=_headers(tokens["author"]),
+            )
+            foreign_export = await client.get(
+                f"/v1/simulations/{simulation_id}/evidence-export",
+                headers=_headers(tokens["foreign_reviewer"]),
+            )
+            assert denied_author_export.status_code == foreign_export.status_code == 404
 
             denied_approval = await client.post(
                 f"/v1/simulations/{simulation_id}/approvals",
@@ -182,6 +198,33 @@ async def test_multitenant_role_and_object_authorization_matrix() -> None:
             assert gate.status_code == 201
             assert gate.json()["decision"] == "block"
 
+            evidence_export = await client.get(
+                f"/v1/simulations/{simulation_id}/evidence-export",
+                headers=_headers(tokens["reviewer"]),
+            )
+            assert evidence_export.status_code == 200
+            assert evidence_export.headers["content-disposition"].startswith("attachment;")
+            exported = evidence_export.json()
+            assert exported["export_checksum"].startswith("sha256:")
+            assert evidence_export.headers["etag"] == f'"{exported["export_checksum"]}"'
+            assert exported["evidence"]["tenant_id"] == str(TENANT_ID)
+            assert exported["evidence"]["simulation"]["id"] == simulation_id
+            assert exported["evidence"]["approval"]["id"] == approval.json()["id"]
+            assert exported["evidence"]["release_gate"]["id"] == gate.json()["id"]
+
+            repeated_export = await client.get(
+                f"/v1/simulations/{simulation_id}/evidence-export",
+                headers=_headers(tokens["reviewer"]),
+            )
+            assert repeated_export.status_code == 200
+            assert repeated_export.json() == exported
+
+            foreign_export_after_decision = await client.get(
+                f"/v1/simulations/{simulation_id}/evidence-export",
+                headers=_headers(tokens["foreign_reviewer"]),
+            )
+            assert foreign_export_after_decision.status_code == 404
+
             audit = await client.get("/v1/audit-events", headers=_headers(tokens["auditor"]))
             foreign_audit = await client.get(
                 "/v1/audit-events", headers=_headers(tokens["foreign_auditor"])
@@ -189,6 +232,7 @@ async def test_multitenant_role_and_object_authorization_matrix() -> None:
             assert audit.status_code == foreign_audit.status_code == 200
             assert audit.json()["items"]
             assert all(item["tenant_id"] == str(TENANT_ID) for item in audit.json()["items"])
+            assert any(item["action"] == "evidence.exported" for item in audit.json()["items"])
             assert all(
                 item["tenant_id"] == str(SECOND_TENANT_ID) for item in foreign_audit.json()["items"]
             )

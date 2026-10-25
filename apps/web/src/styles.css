@@ -367,6 +367,11 @@ select {
 .gate small {
   color: #8c9c97;
 }
+.export-proof {
+  overflow-wrap: anywhere;
+  font-family: ui-monospace, monospace;
+  font-size: 11px;
+}
 .error {
   color: #ff918a !important;
 }

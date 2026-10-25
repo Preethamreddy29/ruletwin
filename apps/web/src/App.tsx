@@ -57,6 +57,11 @@ interface Gate {
   reasons: string[];
 }
 
+interface EvidenceExport {
+  export_checksum: string;
+  evidence: { schema_version: string; tenant_id: string; simulation: { id: string } };
+}
+
 async function api<T>(
   path: string,
   token?: string | null,
@@ -94,6 +99,7 @@ export function App() {
   const [gate, setGate] = useState<Gate | null>(null);
   const [isolationProof, setIsolationProof] = useState<string | null>(null);
   const [auditCount, setAuditCount] = useState<number | null>(null);
+  const [exportProof, setExportProof] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const pollTimer = useRef<number | null>(null);
 
@@ -105,6 +111,7 @@ export function App() {
     setError(null);
     setIsolationProof(null);
     setAuditCount(null);
+    setExportProof(null);
     const issued = (
       await api<{ access_token: string }>("/v1/dev/token", null, {
         method: "POST",
@@ -174,6 +181,7 @@ export function App() {
     setImpact(null);
     setApprovalId(null);
     setGate(null);
+    setExportProof(null);
     setIsolationProof(null);
     try {
       const candidate = (
@@ -297,6 +305,32 @@ export function App() {
     try {
       const result = (await api<{ items: object[] }>("/v1/audit-events", token)).body;
       setAuditCount(result.items.length);
+    } catch (reason) {
+      setError((reason as Error).message);
+    }
+  };
+
+  const downloadEvidence = async () => {
+    if (
+      !simulation ||
+      !token ||
+      !sameTenant ||
+      !["reviewer", "release_approver", "auditor"].includes(role)
+    )
+      return;
+    setError(null);
+    try {
+      const result = (
+        await api<EvidenceExport>(`/v1/simulations/${simulation.id}/evidence-export`, token)
+      ).body;
+      const blob = new Blob([JSON.stringify(result, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `ruletwin-evidence-${simulation.id}.json`;
+      link.click();
+      URL.revokeObjectURL(url);
+      setExportProof(result.export_checksum);
     } catch (reason) {
       setError((reason as Error).message);
     }
@@ -478,6 +512,23 @@ export function App() {
                 <strong>{gate.decision}</strong>
                 <p>{gate.reasons[0]}</p>
               </div>
+            )}
+            <button
+              type="button"
+              className="secondary"
+              onClick={() => void downloadEvidence()}
+              disabled={
+                !impact ||
+                !sameTenant ||
+                !["reviewer", "release_approver", "auditor"].includes(role)
+              }
+            >
+              Download evidence bundle
+            </button>
+            {exportProof && (
+              <p className="proof export-proof" role="status">
+                Evidence bundle ready · {exportProof}
+              </p>
             )}
             {role === "auditor" && (
               <button type="button" className="secondary" onClick={() => void inspectAudit()}>

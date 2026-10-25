@@ -37,6 +37,7 @@ async def test_vertical_slice_is_idempotent_recoverable_and_checksum_bound() -> 
     database = Database(url)
     correlation_id = uuid.uuid4()
     idempotency_key = f"integration-{uuid.uuid4()}"
+    candidate_increment = 1001 + (correlation_id.int % 9000)
     try:
         async with database.session() as session, session.begin():
             candidate = await create_rule_version(
@@ -46,7 +47,7 @@ async def test_vertical_slice_is_idempotent_recoverable_and_checksum_bound() -> 
                 definition_id=RULE_DEFINITION_ID,
                 effective_from=datetime.now(UTC).date(),
                 timezone="UTC",
-                rule={"mode": "half_up", "increment_minor_units": 10},
+                rule={"mode": "half_up", "increment_minor_units": candidate_increment},
                 correlation_id=correlation_id,
             )
             requested, created = await create_simulation(

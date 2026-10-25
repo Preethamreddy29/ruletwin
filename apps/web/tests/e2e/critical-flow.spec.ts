@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { readFile } from "node:fs/promises";
 
 for (const scenario of [
   { increment: "5", expected: "allow" },
@@ -23,6 +24,21 @@ for (const scenario of [
     await page.getByLabel("Active synthetic persona").selectOption("novabill-reviewer");
     await page.getByRole("button", { name: "Approve evidence as QA" }).click();
     await expect(page.getByRole("button", { name: "Evidence reviewed" })).toBeDisabled();
+
+    const downloadStarted = page.waitForEvent("download");
+    await page.getByRole("button", { name: "Download evidence bundle" }).click();
+    const download = await downloadStarted;
+    const downloadPath = await download.path();
+    expect(download.suggestedFilename()).toMatch(/^ruletwin-evidence-.+\.json$/);
+    if (!downloadPath) throw new Error("Evidence download did not produce a local file.");
+    const exported = JSON.parse(await readFile(downloadPath, "utf8")) as {
+      export_checksum: string;
+      evidence: { schema_version: string; tenant_id: string };
+    };
+    expect(exported.export_checksum).toMatch(/^sha256:[0-9a-f]{64}$/);
+    expect(exported.evidence.schema_version).toBe("ruletwin-evidence-export-v1");
+    expect(exported.evidence.tenant_id).toMatch(/^[0-9a-f-]{36}$/);
+    await expect(page.getByText(/Evidence bundle ready · sha256:/)).toBeVisible();
 
     await page.getByLabel("Active synthetic persona").selectOption("novabill-approver");
     await page.getByRole("button", { name: "Evaluate release gate" }).click();
