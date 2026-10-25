@@ -101,7 +101,16 @@ class OidcTokenVerifier:
     def __init__(self, settings: Settings, loader: JwksLoader | None = None) -> None:
         if settings.auth_mode != "oidc":
             raise ValueError("OIDC verifier requires auth_mode=oidc")
+        if (
+            settings.oidc_issuer is None
+            or settings.oidc_audience is None
+            or settings.oidc_jwks_url is None
+        ):
+            raise ValueError("OIDC verifier requires complete provider configuration")
         self._settings = settings
+        self._issuer = settings.oidc_issuer
+        self._audience = settings.oidc_audience
+        self._jwks_url = settings.oidc_jwks_url
         self._loader = loader or self._fetch_jwks
         self._keys: dict[str, PyJWK] = {}
         self._cache_expires_at = 0.0
@@ -109,14 +118,13 @@ class OidcTokenVerifier:
         self._lock = asyncio.Lock()
 
     async def _fetch_jwks(self) -> dict[str, Any]:
-        assert self._settings.oidc_jwks_url is not None
         try:
             async with httpx.AsyncClient(
                 timeout=self._settings.oidc_http_timeout_seconds,
                 follow_redirects=False,
             ) as client:
                 response = await client.get(
-                    self._settings.oidc_jwks_url,
+                    self._jwks_url,
                     headers={"Accept": "application/json"},
                 )
                 response.raise_for_status()
@@ -188,15 +196,13 @@ class OidcTokenVerifier:
         return key
 
     def _decode(self, token: str, key: PyJWK) -> TokenPrincipal:
-        assert self._settings.oidc_issuer is not None
-        assert self._settings.oidc_audience is not None
         tenant_claim = self._settings.oidc_tenant_claim
         claims: dict[str, Any] = jwt.decode(
             token,
             key.key,
             algorithms=["RS256"],
-            audience=self._settings.oidc_audience,
-            issuer=self._settings.oidc_issuer,
+            audience=self._audience,
+            issuer=self._issuer,
             options={
                 "require": ["exp", "iat", "iss", "aud", "sub", tenant_claim],
             },
@@ -249,28 +255,38 @@ async def authenticated_identity(request: Request, credentials: Credentials) -> 
     principal = await verifier.verify(credentials.credentials)
     database: Database = request.app.state.database
     if principal.actor_id is not None:
-        identity_filter = "u.id=:identity_value"
         identity_value: uuid.UUID | str = principal.actor_id
+        identity_query = text(
+            """
+            SELECT u.id, u.email, u.display_name, t.slug AS tenant_slug,
+                   t.display_name AS tenant_display_name, utr.role_code
+            FROM users u
+            JOIN user_tenant_roles utr ON utr.user_id=u.id
+            JOIN tenants t ON t.id=utr.tenant_id
+            WHERE u.id=:identity_value AND t.id=:tenant_id
+            ORDER BY utr.role_code
+            """
+        )
     else:
-        identity_filter = "u.oidc_subject=:identity_value"
         if principal.oidc_subject is None:
             raise _authentication_error()
         identity_value = principal.oidc_subject
+        identity_query = text(
+            """
+            SELECT u.id, u.email, u.display_name, t.slug AS tenant_slug,
+                   t.display_name AS tenant_display_name, utr.role_code
+            FROM users u
+            JOIN user_tenant_roles utr ON utr.user_id=u.id
+            JOIN tenants t ON t.id=utr.tenant_id
+            WHERE u.oidc_subject=:identity_value AND t.id=:tenant_id
+            ORDER BY utr.role_code
+            """
+        )
     async with database.session() as session:
         rows = (
             (
                 await session.execute(
-                    text(
-                        f"""
-                        SELECT u.id, u.email, u.display_name, t.slug AS tenant_slug,
-                               t.display_name AS tenant_display_name, utr.role_code
-                        FROM users u
-                        JOIN user_tenant_roles utr ON utr.user_id=u.id
-                        JOIN tenants t ON t.id=utr.tenant_id
-                        WHERE {identity_filter} AND t.id=:tenant_id
-                        ORDER BY utr.role_code
-                        """  # noqa: S608 -- identity_filter is selected from two static literals.
-                    ),
+                    identity_query,
                     {"identity_value": identity_value, "tenant_id": principal.tenant_id},
                 )
             )

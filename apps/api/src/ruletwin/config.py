@@ -65,11 +65,11 @@ class Settings(BaseSettings):
         if missing:
             raise ValueError(f"OIDC configuration is missing: {', '.join(missing)}")
         if self.environment != "test":
-            assert self.oidc_issuer is not None
-            assert self.oidc_jwks_url is not None
-            if not self.oidc_issuer.startswith("https://"):
+            issuer = self.oidc_issuer or ""
+            jwks_url = self.oidc_jwks_url or ""
+            if not issuer.startswith("https://"):
                 raise ValueError("oidc_issuer must use HTTPS outside tests")
-            if not self.oidc_jwks_url.startswith("https://"):
+            if not jwks_url.startswith("https://"):
                 raise ValueError("oidc_jwks_url must use HTTPS outside tests")
         return self
 
