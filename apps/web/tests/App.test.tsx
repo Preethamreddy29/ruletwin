@@ -1,6 +1,28 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+const authMocks = vi.hoisted(() => ({
+  bootstrap: vi.fn(),
+  signinRedirect: vi.fn(),
+  signoutRedirect: vi.fn(),
+}));
+
+vi.mock("../src/auth", () => ({
+  browserAuthConfig: () => ({
+    mode: "oidc",
+    authority: "https://identity.example/",
+    audience: "ruletwin-api",
+    clientId: "pilot-client",
+    redirectUri: "http://localhost/auth/callback",
+    postLogoutRedirectUri: "http://localhost/",
+  }),
+  createOidcManager: () => ({
+    signinRedirect: authMocks.signinRedirect,
+    signoutRedirect: authMocks.signoutRedirect,
+  }),
+  bootstrapOidc: authMocks.bootstrap,
+}));
+
 import { App } from "../src/App";
 
 const tenantA = "11111111-1111-4111-8111-111111111111";
@@ -76,6 +98,7 @@ function installFetch() {
       if (path.endsWith("/health/ready")) return response({ status: "ready" });
       if (path.endsWith("/v1/dev/identities")) return response({ items: identities });
       if (path.endsWith("/v1/dev/scenarios")) return response({ items: scenarios });
+      if (path.endsWith("/v1/scenarios")) return response({ items: [scenarios[0]] });
       if (path.endsWith("/v1/dev/token")) {
         const body = typeof init?.body === "string" ? init.body : "{}";
         const key = (JSON.parse(body) as { identity_key: string }).identity_key;
@@ -83,7 +106,9 @@ function installFetch() {
       }
       if (path.endsWith("/v1/session")) {
         const auth = new Headers(init?.headers).get("Authorization")!;
-        const identity = roleFor(auth.replace("Bearer token-", ""));
+        const identity = roleFor(
+          auth === "Bearer oidc-token" ? "novabill-analyst" : auth.replace("Bearer token-", ""),
+        );
         return response({
           user: { id: "user", display_name: identity.display_name, email: "synthetic@example" },
           tenant: { id: identity.tenant_id, slug: "sandbox", display_name: identity.tenant },
@@ -148,6 +173,10 @@ function installFetch() {
 afterEach(() => {
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
+  vi.unstubAllEnvs();
+  authMocks.bootstrap.mockReset();
+  authMocks.signinRedirect.mockReset();
+  authMocks.signoutRedirect.mockReset();
 });
 
 describe("App", () => {
@@ -200,5 +229,22 @@ describe("App", () => {
     vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("offline")));
     render(<App />);
     expect(await screen.findByText("Unavailable")).toBeInTheDocument();
+  });
+
+  it("establishes and ends an OIDC-backed browser session", async () => {
+    vi.stubEnv("VITE_RULETWIN_AUTH_MODE", "oidc");
+    installFetch();
+    authMocks.bootstrap.mockResolvedValue({ access_token: "oidc-token", expired: false });
+    render(<App />);
+
+    expect(await screen.findByText("Ready")).toBeInTheDocument();
+    expect(screen.getByText("Controlled pilot · external identity")).toBeInTheDocument();
+    expect(screen.getByText("NovaBill Analyst")).toBeInTheDocument();
+    expect(screen.getByText("NovaBill Sandbox · author")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Active synthetic persona")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Sign out" }));
+    await waitFor(() => expect(authMocks.signoutRedirect).toHaveBeenCalledOnce());
+    expect(authMocks.signinRedirect).not.toHaveBeenCalled();
   });
 });

@@ -19,7 +19,7 @@ The sibling portfolio repository is development provenance, not a RuleTwin runti
 | 2 — Engineering foundation | Complete; merged at `ce437aae` with clean-runner evidence | Repeatable engineering base |
 | 3 — First vertical slice | Complete; merged in PR #13 | Core deterministic workflow is executable |
 | 4A — Multi-tenant authorization | Complete; merged in PR #18 at `cffdb30`; protected CI passed | Tenant boundary is executable for implemented surfaces |
-| Controlled-pilot readiness | In progress; evidence export merged, provider-neutral OIDC foundation implemented on `codex/pilot-oidc-foundation` | Invitation-only synthetic-data pilot gate |
+| Controlled-pilot readiness | In progress; evidence export merged, provider-neutral OIDC foundation awaits PR #22 merge, and dependent Auth0/PKCE browser integration is under validation | Invitation-only synthetic-data pilot gate |
 
 ## Delivered foundation
 
@@ -34,7 +34,7 @@ The sibling portfolio repository is development provenance, not a RuleTwin runti
 The controlling scope is [`pilot-readiness-plan.md`](pilot-readiness-plan.md). Delivery is ordered as:
 
 1. Completed-simulation evidence export and authorization — merged through PR #21.
-2. Merge the OIDC verification foundation, select a provider, and implement authorization-code/PKCE login and logout.
+2. Merge the OIDC verification foundation and its dependent Auth0/PKCE browser integration; complete real-provider login/logout and invited-subject evidence.
 3. Request, dataset, execution, queue, retry, and concurrency limits.
 4. Structured operational telemetry and actionable alerts.
 5. Reproducible HTTPS deployment, external secret management, automated migrations, backups, restore, and rollback.

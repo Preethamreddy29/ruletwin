@@ -15,7 +15,7 @@ The authoritative requirements remain in [`product/requirements.md`](product/req
 | Signature workflow UI-to-data | `App.tsx`, API/application/domain/worker/database path | Chromium allow/block critical flows | Phase 3 complete |
 | Implemented-path tenant isolation | Auth dependency plus tenant-scoped application queries | Same-tenant allow; cross-tenant and absent-object equivalent 404; isolated audit lists | Phase 4A slice complete |
 | Deterministic evidence export | Completed-simulation export service/API, JSON download UI, export checksum and audit event | Reviewer allow; analyst deny; cross-tenant equivalent 404; repeat-export equality; API/web tests and protected CI | Pilot increment merged through PR #21 |
-| External identity verification | OIDC RS256 verifier, bounded JWKS cache/refresh, `users.oidc_subject`, database role resolution, generic session API | Issuer/audience/signature/expiry/lifetime/tenant failures; key rotation; unprovisioned subject and wrong-tenant denial | Foundation implemented; provider login/logout pending |
+| External identity verification and browser session | OIDC RS256 verifier, bounded JWKS cache/refresh, `users.oidc_subject`, audited provisioning command, authorization-code/PKCE browser client, generic session and tenant-scoped scenario APIs | Issuer/audience/signature/expiry/lifetime/tenant failures; key rotation; unprovisioned/wrong-tenant denial; browser configuration/login/logout tests | Implementation complete on dependent branches; Auth0-hosted login/logout and rotation evidence pending |
 | High threats and full-surface isolation | Phase 1 threat/control plans | Reproduction/artifact/webhook/metrics/operator negative matrix | Remaining controlled-pilot scope |
 
 

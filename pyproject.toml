@@ -35,6 +35,7 @@ dev = [
 
 [project.scripts]
 ruletwin-seed = "ruletwin.seed:main"
+ruletwin-provision-oidc = "ruletwin.provision_oidc:main"
 ruletwin-worker = "ruletwin.worker.main:main"
 
 [tool.setuptools]
