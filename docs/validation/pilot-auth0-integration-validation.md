@@ -6,7 +6,7 @@
 
 **Baseline:** `codex/pilot-oidc-foundation` at `1a4c240`
 
-**Status:** Implementation validation in progress; provider-hosted evidence pending
+**Status:** Implementation validation complete; provider-hosted evidence pending
 
 ## Implemented scope
 
@@ -36,7 +36,12 @@
 | OpenAPI validation | Passed; 13 paths, 13 operations and 133 references |
 | Repository secret scan | Passed |
 | Compose configuration | Passed for the `full` profile |
-| Integration, migration and browser workflows | Pending Linux-container rerun; Docker Engine was unavailable during the local validation attempt |
+| Clean-runner CI | Passed on commit `45eeb9e`; all 5 required jobs |
+| Backend migrations and integration | Passed in clean-runner CI |
+| Playwright critical workflow | Passed in clean-runner CI |
+| Compose build, startup and container evidence | Passed in clean-runner CI |
+
+The local Docker Engine was unavailable during the initial workstation validation attempt. No local container result was claimed; GitHub's Ubuntu clean runner supplied the authoritative migration, integration, browser and container evidence instead.
 
 ## Remaining PILOT-01 evidence
 
