@@ -94,6 +94,11 @@ jobs:
       - run: pnpm --filter @ruletwin/web exec playwright install --with-deps chromium
       - run: docker compose --profile core up --build --detach
       - run: pnpm e2e
+      - name: Capture service diagnostics
+        if: failure()
+        run: |
+          docker compose --profile core ps
+          docker compose --profile core logs --tail 200 api worker
       - name: Stop test services
         if: always()
         run: docker compose --profile core down --volumes
