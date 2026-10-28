@@ -40,7 +40,10 @@ def create_app(settings: Settings, readiness_probe: ReadinessProbe | None = None
     app.state.settings = settings
     app.state.database = database
     app.state.token_verifier = create_token_verifier(settings)
-    app.add_middleware(RequestContextMiddleware)
+    app.add_middleware(
+        RequestContextMiddleware,
+        max_request_body_bytes=settings.max_request_body_bytes,
+    )
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.parsed_cors_origins,

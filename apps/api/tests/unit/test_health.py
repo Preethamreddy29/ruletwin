@@ -65,3 +65,23 @@ async def test_missing_route_uses_stable_problem_contract(ready_client: AsyncCli
     assert response.status_code == 404
     assert body["code"] == "not-found"
     assert body["correlation_id"] == response.headers["X-Correlation-ID"]
+
+
+async def test_oversized_request_is_rejected_before_routing(ready_client: AsyncClient) -> None:
+    response = await ready_client.post(
+        "/v1/dev/token",
+        json={"identity_key": "x" * 70000},
+    )
+    assert response.status_code == 413
+    assert response.json()["code"] == "request-too-large"
+    assert response.headers["X-Correlation-ID"]
+
+
+async def test_invalid_content_length_fails_closed(ready_client: AsyncClient) -> None:
+    response = await ready_client.post(
+        "/v1/dev/token",
+        content=b"{}",
+        headers={"Content-Length": "not-a-number"},
+    )
+    assert response.status_code == 413
+    assert response.json()["code"] == "request-too-large"

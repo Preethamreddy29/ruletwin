@@ -95,6 +95,10 @@ def _database(request: Request) -> Database:
     return request.app.state.database  # type: ignore[no-any-return]
 
 
+def _settings(request: Request) -> Settings:
+    return request.app.state.settings  # type: ignore[no-any-return]
+
+
 def _correlation(request: Request) -> uuid.UUID:
     return uuid.UUID(request.state.request_id)
 
@@ -235,6 +239,13 @@ async def post_dataset(
 ) -> dict[str, Any]:
     if body.tenant_id != identity.tenant_id:
         raise ProblemError(404, "Not found", "Resource not found.", "not-found")
+    if body.event_count > _settings(request).max_dataset_events:
+        raise ProblemError(
+            413,
+            "Dataset limit exceeded",
+            "The requested dataset exceeds the configured pilot event limit.",
+            "dataset-limit-exceeded",
+        )
     async with _database(request).session() as session, session.begin():
         return await create_dataset(
             session,
@@ -267,6 +278,7 @@ async def post_simulation(
             policy_id=body.risk_policy_version_id,
             idempotency_key=idempotency_key,
             correlation_id=_correlation(request),
+            max_pending_simulations=_settings(request).max_pending_simulations_per_tenant,
         )
     response.headers["Location"] = f"/v1/simulations/{result['id']}"
     response.headers["ETag"] = f'"{result["version"]}"'

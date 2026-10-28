@@ -37,8 +37,16 @@ class Settings(BaseSettings):
     synthetic_user_id: str = "4c542107-b2c6-5f9f-9bb8-832efd9b3dc2"
     synthetic_user_email: str = "analyst@novabill.example"
     readiness_timeout_seconds: float = Field(default=2.0, gt=0, le=10)
+    max_request_body_bytes: int = Field(default=65536, ge=1024, le=1048576)
+    max_dataset_events: int = Field(default=10000, ge=100, le=100000)
+    max_pending_simulations_per_tenant: int = Field(default=25, ge=1, le=1000)
     worker_poll_seconds: float = Field(default=2.0, gt=0, le=60)
     worker_lease_seconds: int = Field(default=30, ge=5, le=300)
+    worker_execution_timeout_seconds: float = Field(default=30.0, ge=1, le=300)
+    worker_max_attempts: int = Field(default=5, ge=1, le=20)
+    worker_retry_base_seconds: int = Field(default=2, ge=1, le=60)
+    worker_retry_max_seconds: int = Field(default=60, ge=1, le=600)
+    worker_concurrency: int = Field(default=1, ge=1, le=1)
 
     @field_validator("database_url")
     @classmethod
@@ -49,6 +57,8 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def validate_authentication_mode(self) -> "Settings":
+        if self.worker_retry_base_seconds > self.worker_retry_max_seconds:
+            raise ValueError("worker retry base must not exceed the retry maximum")
         if self.auth_mode == "development":
             if self.environment not in {"dev", "test"}:
                 raise ValueError("development authentication is allowed only in dev or test")

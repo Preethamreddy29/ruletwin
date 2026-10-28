@@ -24,6 +24,7 @@ CLAIM_SQL = text(
         SELECT id
         FROM outbox_events
         WHERE status = 'pending'
+          AND attempts < :max_attempts
           AND available_at <= now()
           AND (leased_until IS NULL OR leased_until < now())
         ORDER BY available_at, id
@@ -47,10 +48,15 @@ async def claim_one(
     *,
     lease_owner: str,
     lease_seconds: int,
+    max_attempts: int = 5,
 ) -> ClaimedEvent | None:
     result = await session.execute(
         CLAIM_SQL,
-        {"lease_owner": lease_owner, "lease_seconds": lease_seconds},
+        {
+            "lease_owner": lease_owner,
+            "lease_seconds": lease_seconds,
+            "max_attempts": max_attempts,
+        },
     )
     row = result.mappings().one_or_none()
     if row is None:

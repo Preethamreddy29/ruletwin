@@ -1,6 +1,6 @@
 # Controlled Pilot Readiness Plan
 **Status:** Approved implementation baseline  
-**Baseline:** `main` at `d64275f`  
+**Baseline:** `main` at `e95e3ba`
 **Pilot data:** Synthetic data only  
 **Deployment audience:** Invited users only until every exit criterion passes
 ## Objective
@@ -73,4 +73,4 @@ The pilot release is blocked unless:
 
 ## Current assessment
 
-Phase 4A provides strong executable evidence for the currently implemented synthetic workflow, but the controlled-pilot release gate is not yet satisfied. The first implementation increment should be evidence export plus complete authorization of every pilot-visible surface, followed by production OIDC.
+Phase 4A, evidence export, provider-neutral OIDC verification, and Auth0/PKCE browser integration are merged with protected CI evidence. Resource-safety implementation is the current increment. The controlled-pilot release gate is not yet satisfied: Auth0-hosted identity evidence, full-surface isolation, deployment, secrets, recovery, operations, supply-chain release artifacts, performance, and usability acceptance remain.

@@ -248,6 +248,7 @@ async def create_simulation(
     policy_id: uuid.UUID,
     idempotency_key: str,
     correlation_id: uuid.UUID,
+    max_pending_simulations: int = 25,
 ) -> tuple[dict[str, Any], bool]:
     existing = (
         (
@@ -313,6 +314,26 @@ async def create_simulation(
     if valid is None:
         raise ProblemError(
             422, "Invalid simulation", "The immutable version tuple is invalid.", "invalid-tuple"
+        )
+    await session.execute(
+        text("SELECT pg_advisory_xact_lock(hashtextextended(CAST(:tenant_id AS text), 0))"),
+        {"tenant_id": tenant_id},
+    )
+    pending_count = await session.scalar(
+        text(
+            """
+            SELECT count(*) FROM simulations
+            WHERE tenant_id=:tenant_id AND status IN ('requested','queued','running')
+            """
+        ),
+        {"tenant_id": tenant_id},
+    )
+    if int(pending_count or 0) >= max_pending_simulations:
+        raise ProblemError(
+            429,
+            "Queue capacity exceeded",
+            "The tenant has reached the configured pending simulation limit.",
+            "queue-capacity-exceeded",
         )
     simulation_id = uuid.uuid4()
     await session.execute(
