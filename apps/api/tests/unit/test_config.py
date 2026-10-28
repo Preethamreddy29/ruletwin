@@ -55,3 +55,21 @@ def test_oidc_configuration_is_required_and_https_only() -> None:
             oidc_audience="ruletwin-api",
             oidc_jwks_url="http://identity.example/.well-known/jwks.json",
         )
+
+
+def test_resource_limits_reject_unsafe_configuration() -> None:
+    with pytest.raises(ValidationError, match="retry base"):
+        Settings(
+            environment="test",
+            database_url="postgresql://localhost/ruletwin_test",
+            jwt_secret="test-only-ruletwin-jwt-secret-000000000000",
+            worker_retry_base_seconds=10,
+            worker_retry_max_seconds=5,
+        )
+    with pytest.raises(ValidationError):
+        Settings(
+            environment="test",
+            database_url="postgresql://localhost/ruletwin_test",
+            jwt_secret="test-only-ruletwin-jwt-secret-000000000000",
+            worker_concurrency=2,
+        )

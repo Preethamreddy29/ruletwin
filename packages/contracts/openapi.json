@@ -77,6 +77,7 @@
         "responses": {
           "201": {"description": "Immutable dataset manifest created", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/DatasetManifest"}}}},
           "409": {"$ref": "#/components/responses/Conflict"},
+          "413": {"$ref": "#/components/responses/ResourceLimit"},
           "422": {"$ref": "#/components/responses/ValidationError"}
         }
       }
@@ -89,6 +90,7 @@
         "responses": {
           "202": {"description": "Simulation accepted", "headers": {"Location": {"schema": {"type": "string", "format": "uri-reference"}}, "ETag": {"$ref": "#/components/headers/ETag"}}, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Simulation"}}}},
           "409": {"$ref": "#/components/responses/Conflict"},
+          "429": {"$ref": "#/components/responses/ResourceLimit"},
           "422": {"$ref": "#/components/responses/ValidationError"}
         }
       }
@@ -188,6 +190,7 @@
     "responses": {
       "NotFound": {"description": "Object is absent or not authorized", "content": {"application/problem+json": {"schema": {"$ref": "#/components/schemas/Problem"}}}},
       "Conflict": {"description": "Idempotency, dependency, state or concurrency conflict", "content": {"application/problem+json": {"schema": {"$ref": "#/components/schemas/Problem"}}}},
+      "ResourceLimit": {"description": "Configured pilot resource limit exceeded", "content": {"application/problem+json": {"schema": {"$ref": "#/components/schemas/Problem"}}}},
       "ValidationError": {"description": "Domain or schema validation failed", "content": {"application/problem+json": {"schema": {"$ref": "#/components/schemas/Problem"}}}}
     },
     "schemas": {

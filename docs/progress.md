@@ -1,20 +1,20 @@
 # Progress and Status
 
-## Update — 2026-10-27, Auth0/PKCE integration increment
+## Update — 2026-10-28, resource-safety increment
 
-The dependent `codex/pilot-auth0-integration` branch adds standards-based authorization-code/PKCE browser login and provider logout using `oidc-client-ts`, session-scoped token storage, a tenant-scoped authenticated scenario endpoint, and container build configuration for public OIDC settings. The local development persona flow remains the default and is kept separate from hosted OIDC mode.
+PR #22 merged the provider-neutral OIDC verification foundation as `8c51d54`. PR #24 merged standards-based authorization-code/PKCE browser login, provider logout, session-scoped token storage, invited-subject provisioning, and Auth0 operations guidance as `e95e3ba`. Both merge heads passed the five protected CI checks.
 
-Invited-subject provisioning is implemented as a fail-closed operator command. It binds one exact provider subject to one pre-seeded pilot identity, requires the same tenant's release-approver persona, refuses replacement or reuse, keeps roles in PostgreSQL, and records only a subject digest in append-only audit evidence. The Auth0 configuration and evidence procedure is documented in `docs/operations/auth0-pilot.md`.
+The current `codex/pilot-resource-safety` increment adds request-body, replay-dataset, per-tenant queue, execution-time, retry-attempt, retry-delay, and worker-concurrency controls. It includes problem responses, OpenAPI declarations, configuration bounds, and boundary/saturation tests. Protected CI and container-level saturation/recovery evidence are still required before this increment or PILOT-06 can close.
 
-This increment does not close PILOT-01. PR #22 must merge first, the Auth0 tenant/application/API and namespaced tenant claim require owner configuration, distinct invited subjects must be provisioned, and deployed login/logout plus provider key-rotation evidence must pass.
+PILOT-01 also remains open: the Auth0 tenant/application/API and namespaced tenant claim require owner configuration, distinct invited subjects must be provisioned, and deployed login/logout, invalid-token, and provider key-rotation evidence must pass.
 
-**As of:** 2026-10-25
+**As of:** 2026-10-28
 
-**Baseline:** `main` at `257e604`
+**Baseline:** `main` at `e95e3ba`
 
 **Milestone:** Controlled-pilot readiness implementation
 
-**Overall:** Tenant authorization and checksum-bound evidence export are merged with successful protected CI. A provider-neutral OIDC verification foundation is implemented on branch `codex/pilot-oidc-foundation` and awaits review/merge. RuleTwin is suitable for a synthetic local demonstration. It is not approved for an externally hosted pilot or real data.
+**Overall:** Tenant authorization, checksum-bound evidence export, OIDC verification, and Auth0/PKCE browser integration are merged with successful protected CI. RuleTwin is suitable for a synthetic local demonstration. It is not approved for an externally hosted pilot or real data.
 
 ## Completed evidence
 
@@ -33,18 +33,18 @@ This increment does not close PILOT-01. PR #22 must merge first, the Auth0 tenan
 
 ## Current limits
 
-- Development identities remain local-only. OIDC provider selection, user provisioning, and browser login/logout are not complete.
+- Auth0-hosted configuration, invited-user provisioning, login/logout, invalid-token, and key-rotation evidence require owner/provider access and are not complete.
 - Isolation evidence covers implemented API/UI paths, including completed-simulation JSON export, only; every future reproduction, artifact, webhook, metrics, and operator path must be protected or disabled.
 - Only the deterministic rounding-rule family and synthetic data packs are supported.
-- Hosted deployment, secret management, recovery, rollback, operational alerts, resource limits, SBOM/release artifacts, and measured reference-profile performance do not yet have pilot exit evidence.
+- Hosted deployment, secret management, recovery, rollback, operational alerts, complete resource-safety evidence, SBOM/release artifacts, and measured reference-profile performance do not yet have pilot exit evidence.
 
 ## Next milestone
 
 The approved implementation baseline is [`docs/pilot-readiness-plan.md`](pilot-readiness-plan.md). Work is ordered as:
 
-1. Review and merge the provider-neutral OIDC verification foundation.
-2. Select the provider and implement authorization-code/PKCE login, logout, and deployed identity configuration evidence.
-3. Resource limits, rate controls, observability, and alerting.
+1. Complete and merge the resource-safety foundation with protected CI and container evidence.
+2. Complete Auth0-hosted login/logout, invited identity, invalid-token, and rotation evidence.
+3. Add rate controls, observability, and alerting.
 4. Reproducible deployment, external secret storage, backup/restore, and rollback.
 5. Security, isolation, recovery, performance, and usability acceptance.
 6. Immutable `v0.4.0-pilot.1` release after every gate passes.

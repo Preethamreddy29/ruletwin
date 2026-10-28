@@ -76,6 +76,22 @@ async def test_vertical_slice_is_idempotent_recoverable_and_checksum_bound() -> 
             assert duplicate_created is False
             assert duplicate["id"] == requested["id"]
 
+            with pytest.raises(ProblemError) as saturated:
+                await create_simulation(
+                    session,
+                    tenant_id=TENANT_ID,
+                    actor_id=AUTHOR_ID,
+                    baseline_id=BASELINE_RULE_VERSION_ID,
+                    candidate_id=candidate["id"],
+                    dataset_id=DATASET_ID,
+                    policy_id=POLICY_ID,
+                    idempotency_key=f"saturated-{uuid.uuid4()}",
+                    correlation_id=correlation_id,
+                    max_pending_simulations=1,
+                )
+            assert saturated.value.status == 429
+            assert saturated.value.code == "queue-capacity-exceeded"
+
         async with database.session() as session, session.begin():
             with pytest.raises(ProblemError, match="Evidence incomplete"):
                 await create_approval(

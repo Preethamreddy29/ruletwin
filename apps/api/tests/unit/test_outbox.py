@@ -2,6 +2,7 @@ import uuid
 from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock
 
+from ruletwin.worker.main import retry_delay_seconds
 from ruletwin.worker.outbox import CLAIM_SQL, claim_one
 
 
@@ -28,6 +29,7 @@ async def test_claim_one_uses_skip_locked_and_maps_event() -> None:
     assert claimed is not None
     assert claimed.id == event_id
     session.execute.assert_awaited_once()
+    assert session.execute.await_args.args[1]["max_attempts"] == 5
 
 
 async def test_claim_one_returns_none_when_queue_is_empty() -> None:
@@ -36,3 +38,9 @@ async def test_claim_one_returns_none_when_queue_is_empty() -> None:
     session = AsyncMock()
     session.execute.return_value = result
     assert await claim_one(session, lease_owner="worker-1", lease_seconds=30) is None
+
+
+def test_retry_delay_is_exponential_and_capped() -> None:
+    assert retry_delay_seconds(1, base_seconds=2, max_seconds=10) == 2
+    assert retry_delay_seconds(3, base_seconds=2, max_seconds=10) == 8
+    assert retry_delay_seconds(8, base_seconds=2, max_seconds=10) == 10

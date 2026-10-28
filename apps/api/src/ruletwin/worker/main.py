@@ -14,6 +14,10 @@ from ruletwin.worker.outbox import claim_one
 LOGGER = logging.getLogger(__name__)
 
 
+def retry_delay_seconds(attempt: int, *, base_seconds: int, max_seconds: int) -> int:
+    return int(min(max_seconds, base_seconds * (2 ** max(0, attempt - 1))))
+
+
 async def run() -> None:
     settings = get_settings()
     configure_logging(settings.log_level)
@@ -27,6 +31,7 @@ async def run() -> None:
                     session,
                     lease_owner=worker_id,
                     lease_seconds=settings.worker_lease_seconds,
+                    max_attempts=settings.worker_max_attempts,
                 )
             if event is None:
                 LOGGER.info("worker_heartbeat", extra={"request_id": None, "trace_id": None})
@@ -38,7 +43,10 @@ async def run() -> None:
             )
             try:
                 async with database.session() as session, session.begin():
-                    outcome = await process_simulation_event(session, event, worker_id=worker_id)
+                    async with asyncio.timeout(settings.worker_execution_timeout_seconds):
+                        outcome = await process_simulation_event(
+                            session, event, worker_id=worker_id
+                        )
                 LOGGER.info(
                     "outbox_event_processed",
                     extra={"request_id": str(event.id), "trace_id": str(event.id)},
@@ -54,17 +62,49 @@ async def run() -> None:
                     extra={"request_id": str(event.id), "trace_id": str(event.id)},
                 )
                 async with database.session() as session, session.begin():
-                    await session.execute(
-                        text(
-                            """
-                            UPDATE outbox_events
-                            SET leased_until=NULL, lease_owner=NULL, last_error=:error,
-                                available_at=now() + interval '2 seconds'
-                            WHERE id=:id AND status='pending'
-                            """
-                        ),
-                        {"id": event.id, "error": str(exc)[:1000]},
-                    )
+                    if event.attempts >= settings.worker_max_attempts:
+                        await session.execute(
+                            text(
+                                """
+                                UPDATE outbox_events
+                                SET status='failed', leased_until=NULL, lease_owner=NULL,
+                                    last_error=:error
+                                WHERE id=:id AND status='pending'
+                                """
+                            ),
+                            {"id": event.id, "error": str(exc)[:1000]},
+                        )
+                        await session.execute(
+                            text(
+                                """
+                                UPDATE simulations SET status='failed', version=version+1
+                                WHERE id=:simulation_id
+                                  AND tenant_id=:tenant_id
+                                  AND status IN ('requested','queued','running')
+                                """
+                            ),
+                            {
+                                "simulation_id": event.aggregate_id,
+                                "tenant_id": event.tenant_id,
+                            },
+                        )
+                    else:
+                        delay = retry_delay_seconds(
+                            event.attempts,
+                            base_seconds=settings.worker_retry_base_seconds,
+                            max_seconds=settings.worker_retry_max_seconds,
+                        )
+                        await session.execute(
+                            text(
+                                """
+                                UPDATE outbox_events
+                                SET leased_until=NULL, lease_owner=NULL, last_error=:error,
+                                    available_at=now() + make_interval(secs => :delay)
+                                WHERE id=:id AND status='pending'
+                                """
+                            ),
+                            {"id": event.id, "error": str(exc)[:1000], "delay": delay},
+                        )
     finally:
         await database.dispose()
 
