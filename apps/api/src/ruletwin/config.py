@@ -46,7 +46,7 @@ class Settings(BaseSettings):
     worker_max_attempts: int = Field(default=5, ge=1, le=20)
     worker_retry_base_seconds: int = Field(default=2, ge=1, le=60)
     worker_retry_max_seconds: int = Field(default=60, ge=1, le=600)
-    worker_concurrency: Literal[1] = 1
+    worker_concurrency: int = Field(default=1, ge=1, le=1)
 
     @field_validator("database_url")
     @classmethod

@@ -73,3 +73,14 @@ def test_resource_limits_reject_unsafe_configuration() -> None:
             jwt_secret="test-only-ruletwin-jwt-secret-000000000000",
             worker_concurrency=2,
         )
+
+
+def test_worker_concurrency_accepts_compose_environment_string(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("RULETWIN_ENVIRONMENT", "test")
+    monkeypatch.setenv("RULETWIN_DATABASE_URL", "postgresql://localhost/ruletwin_test")
+    monkeypatch.setenv("RULETWIN_JWT_SECRET", "test-only-ruletwin-jwt-secret-000000000000")
+    monkeypatch.setenv("RULETWIN_WORKER_CONCURRENCY", "1")
+
+    assert Settings(_env_file=None).worker_concurrency == 1  # type: ignore[call-arg]
