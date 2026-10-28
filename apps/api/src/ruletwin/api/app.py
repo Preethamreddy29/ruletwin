@@ -9,6 +9,7 @@ from fastapi.responses import JSONResponse, Response
 from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
+from ruletwin.api.auth import create_token_verifier
 from ruletwin.api.middleware import RequestContextMiddleware
 from ruletwin.api.problems import ProblemError, problem_response
 from ruletwin.api.vertical_slice import router as vertical_slice_router
@@ -38,6 +39,7 @@ def create_app(settings: Settings, readiness_probe: ReadinessProbe | None = None
     )
     app.state.settings = settings
     app.state.database = database
+    app.state.token_verifier = create_token_verifier(settings)
     app.add_middleware(RequestContextMiddleware)
     app.add_middleware(
         CORSMiddleware,

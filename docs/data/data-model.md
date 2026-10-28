@@ -25,7 +25,7 @@ erDiagram
 
 ## Table groups
 
-- Identity: `tenants`, `users`, `roles`, `user_tenant_roles`.
+- Identity: `tenants`, `users`, `roles`, `user_tenant_roles`. `users.oidc_subject` is a nullable, globally unique mapping for the single configured pilot issuer; provider claims never store or grant RuleTwin roles.
 - Rules: `rule_definitions`, `rule_versions`, `rule_dependencies`.
 - Replay: `dataset_manifests`, `business_events`, `artifact_references`.
 - Execution: `simulations`, `simulation_runs`, `outcomes`, `impact_deltas`.

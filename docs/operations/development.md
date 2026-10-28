@@ -19,6 +19,23 @@ From the repository root in PowerShell:
 
 This creates a repository-local `.venv`, installs Python and web dependencies, generates `.env` with local-only random database credentials and a 64-character JWT signing secret when absent, and preserves those values outside Git. Existing `.env` files are upgraded with a generated development JWT secret without replacing database credentials.
 
+The local Compose stack explicitly uses `RULETWIN_AUTH_MODE=development`. Development token and persona endpoints fail closed when OIDC mode is selected or when the environment is not `dev`/`test`.
+
+## OIDC pilot configuration
+
+OIDC mode is provider-neutral and requires all of the following environment values:
+
+- `RULETWIN_AUTH_MODE=oidc`
+- `RULETWIN_OIDC_ISSUER` — exact HTTPS issuer from the provider
+- `RULETWIN_OIDC_AUDIENCE` — RuleTwin API audience
+- `RULETWIN_OIDC_JWKS_URL` — HTTPS signing-key endpoint
+- `RULETWIN_OIDC_TENANT_CLAIM` — signed claim containing the RuleTwin tenant UUID; defaults to `tenant_id`
+- `RULETWIN_OIDC_MAX_TOKEN_LIFETIME_SECONDS` — maximum accepted `exp - iat`; defaults to 3600
+
+Each invited user must be provisioned with a unique `users.oidc_subject` matching the provider's immutable `sub` value and must already have explicit rows in `user_tenant_roles`. OIDC token roles are ignored. A valid token for an unprovisioned subject or tenant membership receives the same non-enumerating response as an absent identity.
+
+Do not enable OIDC mode until the provider, pilot identities, custom tenant claim, and secret-management path are approved. Browser authorization-code/PKCE login and logout remain a provider-integration task rather than part of this foundation.
+
 ## Start and inspect
 
 ```powershell

@@ -81,7 +81,7 @@ function installFetch() {
         const key = (JSON.parse(body) as { identity_key: string }).identity_key;
         return response({ access_token: `token-${key}` });
       }
-      if (path.endsWith("/v1/dev/session")) {
+      if (path.endsWith("/v1/session")) {
         const auth = new Headers(init?.headers).get("Authorization")!;
         const identity = roleFor(auth.replace("Bearer token-", ""));
         return response({

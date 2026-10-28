@@ -61,6 +61,13 @@ async def test_multitenant_role_and_object_authorization_matrix() -> None:
             unauthenticated = await client.get(f"/v1/simulations/{uuid.uuid4()}")
             assert unauthenticated.status_code == 401
 
+            active_session = await client.get("/v1/session", headers=_headers(tokens["author"]))
+            assert active_session.status_code == 200
+            assert active_session.json()["user"]["id"] == str(AUTHOR_ID)
+            assert active_session.json()["tenant"]["id"] == str(TENANT_ID)
+            assert active_session.json()["roles"] == ["author"]
+            assert active_session.json()["synthetic"] is True
+
             denied_rule = await client.post(
                 f"/v1/tenants/{TENANT_ID}/rule-versions",
                 headers=_headers(tokens["reviewer"], idempotency=True),
