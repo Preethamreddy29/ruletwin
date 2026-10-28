@@ -1,5 +1,7 @@
 import { FormEvent, useEffect, useRef, useState } from "react";
 
+import { bootstrapOidc, browserAuthConfig, createOidcManager } from "./auth";
+
 type ServiceState = "checking" | "ready" | "unavailable";
 type WorkflowState =
   "draft" | "creating" | "queued" | "running" | "completed" | "reviewed" | "decided" | "failed";
@@ -84,6 +86,7 @@ function newKey(prefix: string) {
 }
 
 export function App() {
+  const authMode = import.meta.env.VITE_RULETWIN_AUTH_MODE === "oidc" ? "oidc" : "development";
   const [service, setService] = useState<ServiceState>("checking");
   const [workflow, setWorkflow] = useState<WorkflowState>("draft");
   const [identities, setIdentities] = useState<IdentityOption[]>([]);
@@ -102,6 +105,7 @@ export function App() {
   const [exportProof, setExportProof] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const pollTimer = useRef<number | null>(null);
+  const oidcManager = useRef<ReturnType<typeof createOidcManager>>(null);
 
   const scenario = scenarios.find((item) => item.tenant_id === session?.tenant.id) ?? null;
   const sameTenant = Boolean(session && workflowTenantId === session.tenant.id);
@@ -125,26 +129,68 @@ export function App() {
     setSession(active);
   };
 
+  const establishOidcSession = async (accessToken: string) => {
+    const [active, availableScenarios] = await Promise.all([
+      api<SessionResponse>("/v1/session", accessToken),
+      api<{ items: Scenario[] }>("/v1/scenarios", accessToken),
+    ]);
+    setToken(accessToken);
+    setSession(active.body);
+    setScenarios(availableScenarios.body.items);
+  };
+
+  const beginOidcSignIn = async () => {
+    setError(null);
+    try {
+      await oidcManager.current?.signinRedirect();
+    } catch (reason) {
+      setError((reason as Error).message);
+    }
+  };
+
+  const signOut = async () => {
+    setError(null);
+    try {
+      await oidcManager.current?.signoutRedirect();
+    } catch (reason) {
+      setError((reason as Error).message);
+    }
+  };
+
   useEffect(() => {
     const controller = new AbortController();
-    Promise.all([
-      api<{ status: string }>("/health/ready", null, { signal: controller.signal }),
-      api<{ items: IdentityOption[] }>("/v1/dev/identities", null, {
-        signal: controller.signal,
-      }),
-      api<{ items: Scenario[] }>("/v1/dev/scenarios", null, { signal: controller.signal }),
-    ])
-      .then(async ([, identityResult, scenarioResult]) => {
-        setIdentities(identityResult.body.items);
-        setScenarios(scenarioResult.body.items);
-        await signIn("novabill-analyst");
+    const initialize = async () => {
+      try {
+        await api<{ status: string }>("/health/ready", null, { signal: controller.signal });
+        if (authMode === "development") {
+          const [identityResult, scenarioResult] = await Promise.all([
+            api<{ items: IdentityOption[] }>("/v1/dev/identities", null, {
+              signal: controller.signal,
+            }),
+            api<{ items: Scenario[] }>("/v1/dev/scenarios", null, {
+              signal: controller.signal,
+            }),
+          ]);
+          setIdentities(identityResult.body.items);
+          setScenarios(scenarioResult.body.items);
+          await signIn("novabill-analyst");
+        } else {
+          const manager = createOidcManager(browserAuthConfig());
+          oidcManager.current = manager;
+          const user = manager ? await bootstrapOidc(manager) : null;
+          if (user && !user.expired) await establishOidcSession(user.access_token);
+        }
         setService("ready");
-      })
-      .catch((reason: unknown) => {
-        if ((reason as Error).name !== "AbortError") setService("unavailable");
-      });
+      } catch (reason) {
+        if ((reason as Error).name !== "AbortError") {
+          setError((reason as Error).message);
+          setService("unavailable");
+        }
+      }
+    };
+    void initialize();
     return () => controller.abort();
-  }, []);
+  }, [authMode]);
 
   useEffect(
     () => () => {
@@ -355,34 +401,70 @@ export function App() {
 
       <section className="hero compact">
         <div>
-          <p className="eyebrow">Phase 4A · executable tenant isolation</p>
+          <p className="eyebrow">
+            {authMode === "oidc"
+              ? "Controlled pilot · external identity"
+              : "Phase 4A · executable tenant isolation"}
+          </p>
           <h1>Prove who can see and decide each rule change.</h1>
           <p className="lede">
-            Signed development identities exercise server-resolved tenant membership, roles, and
-            object authorization.
+            {authMode === "oidc"
+              ? "OIDC establishes the user while RuleTwin resolves tenant membership, roles, and object authorization from PostgreSQL."
+              : "Signed development identities exercise server-resolved tenant membership, roles, and object authorization."}
           </p>
         </div>
         <aside className="identity">
-          <label htmlFor="identity">Active synthetic persona</label>
-          <select
-            id="identity"
-            value={identityKey}
-            onChange={(event) => void signIn(event.target.value)}
-          >
-            {identities.map((item) => (
-              <option key={item.key} value={item.key}>
-                {item.display_name} · {item.tenant}
-              </option>
-            ))}
-          </select>
-          <strong>{session?.user.display_name ?? "Loading identity"}</strong>
-          <small>
-            {session ? `${session.tenant.display_name} · ${role}` : "Resolving membership"}
-          </small>
+          {authMode === "development" ? (
+            <>
+              <label htmlFor="identity">Active synthetic persona</label>
+              <select
+                id="identity"
+                value={identityKey}
+                onChange={(event) => void signIn(event.target.value)}
+              >
+                {identities.map((item) => (
+                  <option key={item.key} value={item.key}>
+                    {item.display_name} · {item.tenant}
+                  </option>
+                ))}
+              </select>
+              <strong>{session?.user.display_name ?? "Loading identity"}</strong>
+              <small>
+                {session ? `${session.tenant.display_name} · ${role}` : "Resolving membership"}
+              </small>
+            </>
+          ) : (
+            <>
+              <label>Authenticated pilot user</label>
+              <strong>{session?.user.display_name ?? "Not signed in"}</strong>
+              <small>
+                {session ? `${session.tenant.display_name} · ${role}` : "OIDC login required"}
+              </small>
+              <button
+                type="button"
+                className="secondary auth-action"
+                onClick={() => void (session ? signOut() : beginOidcSignIn())}
+              >
+                {session ? "Sign out" : "Sign in"}
+              </button>
+            </>
+          )}
         </aside>
       </section>
 
-      {simulation && !sameTenant ? (
+      {authMode === "oidc" && !session ? (
+        <section className="login-card" aria-label="Pilot sign in">
+          <p className="eyebrow">Invitation-only access</p>
+          <h2>Sign in to continue</h2>
+          <p>
+            Your identity provider verifies who you are. RuleTwin grants access only when the
+            external subject has an active tenant membership in its own database.
+          </p>
+          <button type="button" onClick={() => void beginOidcSignIn()}>
+            Sign in with identity provider
+          </button>
+        </section>
+      ) : simulation && !sameTenant ? (
         <section className="isolation-card" aria-label="Tenant isolation proof">
           <div>
             <p className="eyebrow">Foreign tenant boundary</p>

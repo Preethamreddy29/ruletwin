@@ -46,12 +46,17 @@ services:
       dockerfile: apps/api/Dockerfile
     profiles: ["core", "full"]
     environment:
-      RULETWIN_ENVIRONMENT: dev
+      RULETWIN_ENVIRONMENT: ${RULETWIN_ENVIRONMENT:-dev}
       RULETWIN_DATABASE_URL: postgresql+psycopg://ruletwin_app:${POSTGRES_APP_PASSWORD}@postgres:5432/${POSTGRES_DB}
       RULETWIN_LOG_LEVEL: ${RULETWIN_LOG_LEVEL:-INFO}
-      RULETWIN_AUTH_MODE: development
+      RULETWIN_AUTH_MODE: ${RULETWIN_AUTH_MODE:-development}
       RULETWIN_JWT_SECRET: ${RULETWIN_JWT_SECRET:?Set RULETWIN_JWT_SECRET in .env}
-      RULETWIN_CORS_ORIGINS: http://localhost:5173,http://localhost:8080
+      RULETWIN_OIDC_ISSUER: ${RULETWIN_OIDC_ISSUER:-}
+      RULETWIN_OIDC_AUDIENCE: ${RULETWIN_OIDC_AUDIENCE:-}
+      RULETWIN_OIDC_JWKS_URL: ${RULETWIN_OIDC_JWKS_URL:-}
+      RULETWIN_OIDC_TENANT_CLAIM: ${RULETWIN_OIDC_TENANT_CLAIM:-tenant_id}
+      RULETWIN_OIDC_MAX_TOKEN_LIFETIME_SECONDS: ${RULETWIN_OIDC_MAX_TOKEN_LIFETIME_SECONDS:-3600}
+      RULETWIN_CORS_ORIGINS: ${RULETWIN_CORS_ORIGINS:-http://localhost:5173,http://localhost:8080}
     ports: ["8000:8000"]
     depends_on:
       seed:
@@ -79,11 +84,16 @@ services:
       dockerfile: apps/api/Dockerfile
     profiles: ["core", "full"]
     environment:
-      RULETWIN_ENVIRONMENT: dev
+      RULETWIN_ENVIRONMENT: ${RULETWIN_ENVIRONMENT:-dev}
       RULETWIN_DATABASE_URL: postgresql+psycopg://ruletwin_app:${POSTGRES_APP_PASSWORD}@postgres:5432/${POSTGRES_DB}
       RULETWIN_LOG_LEVEL: ${RULETWIN_LOG_LEVEL:-INFO}
-      RULETWIN_AUTH_MODE: development
+      RULETWIN_AUTH_MODE: ${RULETWIN_AUTH_MODE:-development}
       RULETWIN_JWT_SECRET: ${RULETWIN_JWT_SECRET:?Set RULETWIN_JWT_SECRET in .env}
+      RULETWIN_OIDC_ISSUER: ${RULETWIN_OIDC_ISSUER:-}
+      RULETWIN_OIDC_AUDIENCE: ${RULETWIN_OIDC_AUDIENCE:-}
+      RULETWIN_OIDC_JWKS_URL: ${RULETWIN_OIDC_JWKS_URL:-}
+      RULETWIN_OIDC_TENANT_CLAIM: ${RULETWIN_OIDC_TENANT_CLAIM:-tenant_id}
+      RULETWIN_OIDC_MAX_TOKEN_LIFETIME_SECONDS: ${RULETWIN_OIDC_MAX_TOKEN_LIFETIME_SECONDS:-3600}
     command: ["ruletwin-worker"]
     depends_on:
       seed:
@@ -119,6 +129,13 @@ services:
     build:
       context: .
       dockerfile: apps/web/Dockerfile
+      args:
+        VITE_RULETWIN_AUTH_MODE: ${VITE_RULETWIN_AUTH_MODE:-development}
+        VITE_RULETWIN_OIDC_AUTHORITY: ${VITE_RULETWIN_OIDC_AUTHORITY:-}
+        VITE_RULETWIN_OIDC_AUDIENCE: ${VITE_RULETWIN_OIDC_AUDIENCE:-}
+        VITE_RULETWIN_OIDC_CLIENT_ID: ${VITE_RULETWIN_OIDC_CLIENT_ID:-}
+        VITE_RULETWIN_OIDC_REDIRECT_URI: ${VITE_RULETWIN_OIDC_REDIRECT_URI:-}
+        VITE_RULETWIN_OIDC_POST_LOGOUT_REDIRECT_URI: ${VITE_RULETWIN_OIDC_POST_LOGOUT_REDIRECT_URI:-}
     profiles: ["core", "full"]
     ports: ["8080:8080"]
     depends_on:

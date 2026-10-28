@@ -2,7 +2,7 @@
 
 RuleTwin is a deterministic, tenant-aware change-impact simulator for proposed business-rule changes. It replays synthetic events through baseline and candidate rule versions, compares outcomes, applies a versioned risk policy, and produces reproducible approval evidence.
 
-> **Current state:** Tenant authorization and deterministic evidence export are merged through PR #21 at `257e604`, with protected clean-runner CI passing. A provider-neutral OIDC verification foundation is under development. RuleTwin is a validated synthetic-data pilot candidate, not a production-ready service.
+> **Current state:** Tenant authorization and deterministic evidence export are merged through PR #21 at `257e604`, with protected clean-runner CI passing. A provider-neutral OIDC verification foundation is awaiting merge in PR #22, and the dependent Auth0/PKCE browser integration is under validation. RuleTwin is a validated synthetic-data pilot candidate, not a production-ready service.
 
 ## Product boundary
 
@@ -14,7 +14,7 @@ The portfolio index and governing sources are maintained in the sibling `enterpr
 
 The implemented workflow preserves deterministic simulation while adding two synthetic tenants, short-lived signed development identities, PostgreSQL-resolved memberships, role-separated analyst/reviewer/release-approver/auditor actions, object-level authorization, non-enumerating cross-tenant denial, and checksum-bound JSON evidence export.
 
-The next milestone is controlled-pilot readiness. Its scope, exclusions, required evidence, and user decisions are defined in [`docs/pilot-readiness-plan.md`](docs/pilot-readiness-plan.md). Provider connection and login/logout, full-surface isolation, recovery evidence, deployment automation, operational alerting, resource controls, and measured performance remain required before an externally hosted pilot.
+The next milestone is controlled-pilot readiness. Its scope, exclusions, required evidence, and user decisions are defined in [`docs/pilot-readiness-plan.md`](docs/pilot-readiness-plan.md). The browser now has an authorization-code/PKCE implementation and tenant-scoped scenario discovery; actual Auth0 tenant configuration, invited-user provisioning evidence, full-surface isolation, recovery evidence, deployment automation, operational alerting, resource controls, and measured performance remain required before an externally hosted pilot.
 
 ## Run locally
 
@@ -51,6 +51,8 @@ Start with:
 - [`docs/phase4a-exit-audit.md`](docs/phase4a-exit-audit.md)
 - [`docs/validation/phase4a-validation.md`](docs/validation/phase4a-validation.md)
 - [`docs/validation/pilot-oidc-foundation-validation.md`](docs/validation/pilot-oidc-foundation-validation.md)
+- [`docs/operations/auth0-pilot.md`](docs/operations/auth0-pilot.md)
+- [`docs/validation/pilot-auth0-integration-validation.md`](docs/validation/pilot-auth0-integration-validation.md)
 
 ## Security and limitations
 

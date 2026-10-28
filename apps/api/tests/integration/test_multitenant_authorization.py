@@ -68,6 +68,19 @@ async def test_multitenant_role_and_object_authorization_matrix() -> None:
             assert active_session.json()["roles"] == ["author"]
             assert active_session.json()["synthetic"] is True
 
+            active_scenarios = await client.get("/v1/scenarios", headers=_headers(tokens["author"]))
+            assert active_scenarios.status_code == 200
+            assert [item["tenant_id"] for item in active_scenarios.json()["items"]] == [
+                str(TENANT_ID)
+            ]
+            foreign_scenarios = await client.get(
+                "/v1/scenarios", headers=_headers(tokens["foreign_reviewer"])
+            )
+            assert foreign_scenarios.status_code == 200
+            assert [item["tenant_id"] for item in foreign_scenarios.json()["items"]] == [
+                str(SECOND_TENANT_ID)
+            ]
+
             denied_rule = await client.post(
                 f"/v1/tenants/{TENANT_ID}/rule-versions",
                 headers=_headers(tokens["reviewer"], idempotency=True),

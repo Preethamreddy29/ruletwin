@@ -15,7 +15,8 @@ from ruletwin.api.app import create_app
 from ruletwin.api.auth import OidcTokenVerifier
 from ruletwin.config import Settings
 from ruletwin.db.database import Database
-from ruletwin.scenario import AUTHOR_ID, SECOND_TENANT_ID, TENANT_ID
+from ruletwin.provision_oidc import provision_oidc_subject
+from ruletwin.scenario import APPROVER_ID, AUTHOR_ID, SECOND_TENANT_ID, TENANT_ID
 from ruletwin.seed import seed
 
 
@@ -60,11 +61,43 @@ async def test_oidc_subject_maps_to_database_roles_and_tenant_membership() -> No
 
     database = Database(url)
     try:
-        async with database.session() as session, session.begin():
-            await session.execute(
-                text("UPDATE users SET oidc_subject=:subject WHERE id=:id"),
-                {"subject": subject, "id": AUTHOR_ID},
+        changed = await provision_oidc_subject(
+            url,
+            identity_key="novabill-analyst",
+            subject=subject,
+            approved_by_identity_key="novabill-approver",
+        )
+        repeated = await provision_oidc_subject(
+            url,
+            identity_key="novabill-analyst",
+            subject=subject,
+            approved_by_identity_key="novabill-approver",
+        )
+        assert changed is True
+        assert repeated is False
+
+        async with database.session() as session:
+            provision_event = (
+                (
+                    await session.execute(
+                        text(
+                            """
+                            SELECT actor_id, metadata FROM audit_events
+                            WHERE tenant_id=:tenant_id
+                              AND action='identity.oidc_subject.provisioned'
+                              AND object_id=:object_id
+                            ORDER BY created_at DESC LIMIT 1
+                            """
+                        ),
+                        {"tenant_id": TENANT_ID, "object_id": AUTHOR_ID},
+                    )
+                )
+                .mappings()
+                .one()
             )
+        assert provision_event["actor_id"] == APPROVER_ID
+        assert provision_event["metadata"]["subject_digest"].startswith("sha256:")
+        assert subject not in json.dumps(provision_event["metadata"])
 
         app = create_app(settings)
         app.state.token_verifier = OidcTokenVerifier(settings, load)
@@ -94,5 +127,16 @@ async def test_oidc_subject_maps_to_database_roles_and_tenant_membership() -> No
             await session.execute(
                 text("UPDATE users SET oidc_subject=NULL WHERE id=:id"),
                 {"id": AUTHOR_ID},
+            )
+            await session.execute(
+                text(
+                    """
+                    DELETE FROM audit_events
+                    WHERE tenant_id=:tenant_id
+                      AND action='identity.oidc_subject.provisioned'
+                      AND object_id=:object_id
+                    """
+                ),
+                {"tenant_id": TENANT_ID, "object_id": AUTHOR_ID},
             )
         await database.dispose()

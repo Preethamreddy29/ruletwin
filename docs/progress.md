@@ -1,5 +1,13 @@
 # Progress and Status
 
+## Update — 2026-10-27, Auth0/PKCE integration increment
+
+The dependent `codex/pilot-auth0-integration` branch adds standards-based authorization-code/PKCE browser login and provider logout using `oidc-client-ts`, session-scoped token storage, a tenant-scoped authenticated scenario endpoint, and container build configuration for public OIDC settings. The local development persona flow remains the default and is kept separate from hosted OIDC mode.
+
+Invited-subject provisioning is implemented as a fail-closed operator command. It binds one exact provider subject to one pre-seeded pilot identity, requires the same tenant's release-approver persona, refuses replacement or reuse, keeps roles in PostgreSQL, and records only a subject digest in append-only audit evidence. The Auth0 configuration and evidence procedure is documented in `docs/operations/auth0-pilot.md`.
+
+This increment does not close PILOT-01. PR #22 must merge first, the Auth0 tenant/application/API and namespaced tenant claim require owner configuration, distinct invited subjects must be provisioned, and deployed login/logout plus provider key-rotation evidence must pass.
+
 **As of:** 2026-10-25
 
 **Baseline:** `main` at `257e604`

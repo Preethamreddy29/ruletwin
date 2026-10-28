@@ -18,6 +18,16 @@
         }
       }
     },
+    "/v1/scenarios": {
+      "get": {
+        "operationId": "listActiveTenantScenarios",
+        "parameters": [{"$ref": "#/components/parameters/CorrelationId"}],
+        "responses": {
+          "200": {"description": "Synthetic scenarios for the authenticated tenant", "content": {"application/json": {"schema": {"type": "object", "additionalProperties": false, "required": ["items"], "properties": {"items": {"type": "array", "maxItems": 1, "items": {"$ref": "#/components/schemas/Scenario"}}}}}}},
+          "404": {"$ref": "#/components/responses/NotFound"}
+        }
+      }
+    },
     "/v1/tenants/{tenant_id}/rule-versions": {
       "post": {
         "operationId": "createRuleVersion",
@@ -192,6 +202,25 @@
           "tenant": {"type": "object", "additionalProperties": false, "required": ["id", "slug", "display_name"], "properties": {"id": {"$ref": "#/components/schemas/Uuid"}, "slug": {"type": "string"}, "display_name": {"type": "string"}}},
           "roles": {"type": "array", "uniqueItems": true, "items": {"type": "string", "enum": ["author", "reviewer", "release_approver", "auditor"]}},
           "synthetic": {"type": "boolean"}
+        }
+      },
+      "Scenario": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["tenant_id", "tenant_slug", "tenant_display_name", "rule_definition_id", "baseline_rule_version_id", "dataset_manifest_id", "risk_policy_version_id", "engine_version", "generator_version", "event_schema_version", "seed", "event_count"],
+        "properties": {
+          "tenant_id": {"$ref": "#/components/schemas/Uuid"},
+          "tenant_slug": {"type": "string"},
+          "tenant_display_name": {"type": "string"},
+          "rule_definition_id": {"$ref": "#/components/schemas/Uuid"},
+          "baseline_rule_version_id": {"$ref": "#/components/schemas/Uuid"},
+          "dataset_manifest_id": {"$ref": "#/components/schemas/Uuid"},
+          "risk_policy_version_id": {"$ref": "#/components/schemas/Uuid"},
+          "engine_version": {"type": "string", "const": "rounding-engine-v1"},
+          "generator_version": {"type": "string", "const": "rounding-events-v1"},
+          "event_schema_version": {"type": "string", "const": "business-event-v1"},
+          "seed": {"type": "integer", "minimum": 0},
+          "event_count": {"type": "integer", "minimum": 1, "maximum": 100000}
         }
       },
       "CreateRuleVersion": {

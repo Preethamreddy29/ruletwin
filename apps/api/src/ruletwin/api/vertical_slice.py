@@ -123,6 +123,26 @@ def _session(identity: Identity, *, synthetic: bool) -> dict[str, object]:
     }
 
 
+def _scenario(tenant_id: uuid.UUID) -> dict[str, object]:
+    for index, tenant in enumerate(TENANTS):
+        if tenant.id == tenant_id:
+            return {
+                "tenant_id": tenant.id,
+                "tenant_slug": tenant.slug,
+                "tenant_display_name": tenant.display_name,
+                "rule_definition_id": tenant.rule_definition_id,
+                "baseline_rule_version_id": tenant.baseline_rule_version_id,
+                "dataset_manifest_id": tenant.dataset_id,
+                "risk_policy_version_id": tenant.policy_id,
+                "engine_version": ENGINE_VERSION,
+                "generator_version": GENERATOR_VERSION,
+                "event_schema_version": EVENT_SCHEMA_VERSION,
+                "seed": 314159 if index == 0 else 271828,
+                "event_count": 100,
+            }
+    raise ProblemError(404, "Not found", "Resource not found.", "not-found")
+
+
 @router.get("/dev/identities", tags=["development"], include_in_schema=False)
 async def development_identities(request: Request) -> dict[str, object]:
     _development_only(request)
@@ -169,25 +189,13 @@ async def active_session(request: Request, identity: Authenticated) -> dict[str,
 @router.get("/dev/scenarios", tags=["development"], include_in_schema=False)
 async def scenarios(request: Request) -> dict[str, object]:
     _development_only(request)
-    return {
-        "items": [
-            {
-                "tenant_id": tenant.id,
-                "tenant_slug": tenant.slug,
-                "tenant_display_name": tenant.display_name,
-                "rule_definition_id": tenant.rule_definition_id,
-                "baseline_rule_version_id": tenant.baseline_rule_version_id,
-                "dataset_manifest_id": tenant.dataset_id,
-                "risk_policy_version_id": tenant.policy_id,
-                "engine_version": ENGINE_VERSION,
-                "generator_version": GENERATOR_VERSION,
-                "event_schema_version": EVENT_SCHEMA_VERSION,
-                "seed": 314159 if index == 0 else 271828,
-                "event_count": 100,
-            }
-            for index, tenant in enumerate(TENANTS)
-        ]
-    }
+    return {"items": [_scenario(tenant.id) for tenant in TENANTS]}
+
+
+@router.get("/scenarios", tags=["simulation"])
+async def active_scenarios(identity: Authenticated) -> dict[str, object]:
+    """Return only the synthetic scenario assigned to the authenticated tenant."""
+    return {"items": [_scenario(identity.tenant_id)]}
 
 
 @router.post("/tenants/{tenant_id}/rule-versions", status_code=status.HTTP_201_CREATED)
