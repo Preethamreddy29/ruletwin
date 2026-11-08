@@ -5,6 +5,7 @@ import pytest
 from sqlalchemy import text
 
 from ruletwin.db.database import Database
+from ruletwin.operations import read_operational_snapshot
 from ruletwin.worker.outbox import claim_one
 
 
@@ -39,6 +40,10 @@ async def test_database_readiness_and_safe_outbox_claim() -> None:
         assert claimed is not None
         assert claimed.id == event_id
         assert claimed.attempts == 1
+        snapshot = await read_operational_snapshot(database, stale_after_seconds=60)
+        assert snapshot.outbox_leased >= 1
+        assert snapshot.outbox_failed >= 0
+        assert snapshot.stale_simulation_runs >= 0
     finally:
         async with database.session() as session, session.begin():
             await session.execute(

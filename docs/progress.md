@@ -1,5 +1,9 @@
 # Progress and Status
 
+## Update — 2026-11-08, pilot operations baseline in progress
+
+Development branch `codex/pilot-operations-baseline` starts from the refreshed protected `main` baseline at `381febd`. The increment adds aggregate database/queue/worker health metrics, eight actionable Prometheus rules, deterministic alert simulations, automated rule/configuration validation, and an incident runbook. Local validation passed across the database-backed Python suite, web quality/build, Prometheus configuration/rule tests, and the live full stack. It deliberately does not claim centralized hosted logs, notification delivery, operator rehearsal, protected branch evidence, or PILOT-07 closure.
+
 ## Update — 2026-11-08, post-resource-safety baseline
 
 PR #22 merged the provider-neutral OIDC verification foundation as `8c51d54`. PR #24 merged standards-based authorization-code/PKCE browser login, provider logout, session-scoped token storage, invited-subject provisioning, and Auth0 operations guidance as `e95e3ba`. PR #25 merged the resource-safety foundation as `d7365e6`. All three increments passed the five protected CI checks.
@@ -10,7 +14,7 @@ PILOT-01 also remains open: the Auth0 tenant/application/API and namespaced tena
 
 **As of:** 2026-11-08
 
-**Baseline:** `main` at `d7365e6`
+**Baseline:** `main` at `381febd`; operations work on `codex/pilot-operations-baseline`
 
 **Milestone:** Controlled-pilot readiness implementation
 
@@ -37,13 +41,13 @@ PILOT-01 also remains open: the Auth0 tenant/application/API and namespaced tena
 - Auth0-hosted configuration, invited-user provisioning, login/logout, invalid-token, and key-rotation evidence require owner/provider access and are not complete.
 - Isolation evidence covers implemented API/UI paths, including completed-simulation JSON export, only; every future reproduction, artifact, webhook, metrics, and operator path must be protected or disabled.
 - Only the deterministic rounding-rule family and synthetic data packs are supported.
-- Hosted deployment, secret management, recovery, rollback, operational alerts, complete resource-safety evidence, SBOM/release artifacts, and measured reference-profile performance do not yet have pilot exit evidence.
+- Hosted deployment, secret management, recovery, rollback, centralized log/notification delivery, complete resource-safety evidence, SBOM/release artifacts, and measured reference-profile performance do not yet have pilot exit evidence.
 
 ## Next milestone
 
 The approved implementation baseline is [`docs/pilot-readiness-plan.md`](pilot-readiness-plan.md). Work is ordered as:
 
-1. Add structured operational telemetry, health signals, rate controls, actionable alerts, and an incident runbook.
+1. Complete and merge the operations baseline, then capture hosted log delivery, alert delivery/resolution, and operator-rehearsal evidence.
 2. Complete Auth0-hosted login/logout, invited identity, invalid-token, and rotation evidence.
 3. Complete sustained saturation, timeout/recovery, and reference-profile evidence for PILOT-06.
 4. Add reproducible deployment, external secret storage, backup/restore, and rollback.

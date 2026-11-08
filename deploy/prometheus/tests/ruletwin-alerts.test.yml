@@ -1,0 +1,115 @@
+rule_files:
+  - ../rules/ruletwin-alerts.yml
+
+evaluation_interval: 1m
+
+tests:
+  - name: pilot operational failures activate actionable alerts
+    interval: 1m
+    input_series:
+      - series: 'up{job="ruletwin-api"}'
+        values: '0+0x10'
+      - series: 'ruletwin_operational_snapshot_success'
+        values: '0+0x10'
+      - series: 'ruletwin_operational_snapshot_last_success_unixtime'
+        values: '0+0x10'
+      - series: 'ruletwin_outbox_oldest_ready_age_seconds'
+        values: '120+0x10'
+      - series: 'ruletwin_outbox_failed_events'
+        values: '1+0x10'
+      - series: 'ruletwin_stale_simulation_runs'
+        values: '1+0x10'
+      - series: 'ruletwin_http_requests_total{method="GET",route="/health/ready",status="503"}'
+        values: '0+1x10'
+      - series: 'ruletwin_http_request_duration_seconds_bucket{method="GET",route="/v1/scenario",le="0.5"}'
+        values: '0+1x10'
+      - series: 'ruletwin_http_request_duration_seconds_bucket{method="GET",route="/v1/scenario",le="1"}'
+        values: '0+2x10'
+      - series: 'ruletwin_http_request_duration_seconds_bucket{method="GET",route="/v1/scenario",le="2"}'
+        values: '0+3x10'
+      - series: 'ruletwin_http_request_duration_seconds_bucket{method="GET",route="/v1/scenario",le="5"}'
+        values: '0+9x10'
+      - series: 'ruletwin_http_request_duration_seconds_bucket{method="GET",route="/v1/scenario",le="+Inf"}'
+        values: '0+10x10'
+    alert_rule_test:
+      - eval_time: 6m
+        alertname: RuleTwinApiUnavailable
+        exp_alerts:
+          - exp_labels:
+              job: ruletwin-api
+              severity: critical
+              service: ruletwin-api
+            exp_annotations:
+              summary: RuleTwin API is unavailable
+              description: Prometheus has been unable to scrape the RuleTwin API for one minute.
+              runbook: docs/operations/pilot-incident-runbook.md#api-unavailable
+      - eval_time: 6m
+        alertname: RuleTwinOperationalSnapshotFailed
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+              service: ruletwin-api
+            exp_annotations:
+              summary: RuleTwin operational snapshot is failing
+              description: The metrics endpoint is reachable but cannot read operational state from PostgreSQL.
+              runbook: docs/operations/pilot-incident-runbook.md#operational-snapshot-or-database-failure
+      - eval_time: 6m
+        alertname: RuleTwinOperationalSnapshotStale
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              service: ruletwin-api
+            exp_annotations:
+              summary: RuleTwin operational snapshot is stale
+              description: No successful database-backed operational snapshot has been recorded for over two minutes.
+              runbook: docs/operations/pilot-incident-runbook.md#operational-snapshot-or-database-failure
+      - eval_time: 6m
+        alertname: RuleTwinOutboxBacklogStalled
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+              service: ruletwin-worker
+            exp_annotations:
+              summary: RuleTwin work queue is stalled
+              description: At least one ready outbox event has waited more than one minute for processing.
+              runbook: docs/operations/pilot-incident-runbook.md#ready-work-is-stalled
+      - eval_time: 6m
+        alertname: RuleTwinOutboxPermanentFailure
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+              service: ruletwin-worker
+            exp_annotations:
+              summary: RuleTwin has a permanently failed outbox event
+              description: One or more events exhausted the bounded worker retry policy and require investigation.
+              runbook: docs/operations/pilot-incident-runbook.md#permanent-outbox-failure
+      - eval_time: 6m
+        alertname: RuleTwinSimulationRunStale
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+              service: ruletwin-worker
+            exp_annotations:
+              summary: RuleTwin has a stale simulation run
+              description: A running simulation attempt has not updated its heartbeat within the bounded execution window.
+              runbook: docs/operations/pilot-incident-runbook.md#stale-simulation-run
+      - eval_time: 6m
+        alertname: RuleTwinElevatedServerErrors
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              service: ruletwin-api
+            exp_annotations:
+              summary: RuleTwin API is returning repeated server errors
+              description: At least three HTTP 5xx responses were observed during the last five minutes.
+              runbook: docs/operations/pilot-incident-runbook.md#repeated-api-server-errors
+      - eval_time: 6m
+        alertname: RuleTwinHighApiLatency
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              service: ruletwin-api
+            exp_annotations:
+              summary: RuleTwin API latency is high
+              description: The aggregate API p95 request duration has exceeded two seconds for five minutes.
+              runbook: docs/operations/pilot-incident-runbook.md#high-api-latency
