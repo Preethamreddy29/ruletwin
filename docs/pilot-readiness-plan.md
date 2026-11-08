@@ -1,6 +1,6 @@
 # Controlled Pilot Readiness Plan
 **Status:** Approved implementation baseline  
-**Baseline:** `main` at `d7365e6`
+**Baseline:** `main` at `381febd`
 **Pilot data:** Synthetic data only  
 **Deployment audience:** Invited users only until every exit criterion passes
 ## Objective
@@ -50,7 +50,7 @@ Deliver RuleTwin as a controlled, independently deployable pilot that demonstrat
 | PILOT-01 Identity | OIDC verification and Auth0-compatible PKCE browser implementation merged; hosted Auth0 configuration and provider evidence pending |
 | PILOT-02 Tenant isolation | Implemented paths covered; complete exposed-surface matrix pending |
 | PILOT-06 Resource safety | Foundation merged through PR #25; sustained saturation, timeout/recovery, and reference-profile evidence pending |
-| PILOT-07 Operations | Next implementation priority |
+| PILOT-07 Operations | Local implementation baseline complete on development branch: aggregate operational signals, eight Prometheus alerts, deterministic rule tests, and runbook; protected CI plus hosted log/notification evidence pending |
 | PILOT-03, 04, 05, 08, 09, 10 | Remaining controlled-pilot work |
 
 ## Release gate
@@ -83,4 +83,4 @@ The pilot release is blocked unless:
 
 ## Current assessment
 
-Phase 4A, evidence export, provider-neutral OIDC verification, Auth0/PKCE browser integration, and the resource-safety foundation are merged with protected CI evidence. Operations is the next implementation priority, while remaining PILOT-06 evidence must also be completed. The controlled-pilot release gate is not yet satisfied: Auth0-hosted identity evidence, full-surface isolation, deployment, secrets, recovery, operations, supply-chain release artifacts, performance, and usability acceptance remain.
+Phase 4A, evidence export, provider-neutral OIDC verification, Auth0/PKCE browser integration, and the resource-safety foundation are merged with protected CI evidence. The PILOT-07 operations implementation baseline is now being built from `381febd`; hosted centralized logging, notification delivery, and incident-rehearsal evidence remain outside the local repository increment. Remaining PILOT-06 evidence must also be completed. The controlled-pilot release gate is not yet satisfied: Auth0-hosted identity evidence, full-surface isolation, deployment, secrets, recovery, operations, supply-chain release artifacts, performance, and usability acceptance remain.

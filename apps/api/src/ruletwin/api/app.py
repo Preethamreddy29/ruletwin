@@ -1,4 +1,5 @@
 import asyncio
+import logging
 from collections.abc import AsyncIterator, Awaitable, Callable
 from contextlib import asynccontextmanager
 
@@ -16,14 +17,31 @@ from ruletwin.api.vertical_slice import router as vertical_slice_router
 from ruletwin.config import Settings
 from ruletwin.db.database import Database
 from ruletwin.logging import configure_logging
+from ruletwin.operations import (
+    OperationalSnapshotProbe,
+    publish_operational_snapshot,
+    publish_operational_snapshot_failure,
+    read_operational_snapshot,
+)
 
 ReadinessProbe = Callable[[], Awaitable[bool]]
+LOGGER = logging.getLogger(__name__)
 
 
-def create_app(settings: Settings, readiness_probe: ReadinessProbe | None = None) -> FastAPI:
+def create_app(
+    settings: Settings,
+    readiness_probe: ReadinessProbe | None = None,
+    operational_snapshot_probe: OperationalSnapshotProbe | None = None,
+) -> FastAPI:
     configure_logging(settings.log_level)
     database = Database(settings.database_url)
     probe = readiness_probe or database.ping
+    snapshot_probe = operational_snapshot_probe or (
+        lambda: read_operational_snapshot(
+            database,
+            stale_after_seconds=int(settings.worker_execution_timeout_seconds * 2),
+        )
+    )
 
     @asynccontextmanager
     async def lifespan(_: FastAPI) -> AsyncIterator[None]:
@@ -111,6 +129,15 @@ def create_app(settings: Settings, readiness_probe: ReadinessProbe | None = None
 
     @app.get("/metrics", include_in_schema=False)
     async def metrics() -> Response:
+        try:
+            async with asyncio.timeout(settings.readiness_timeout_seconds):
+                publish_operational_snapshot(await snapshot_probe())
+        except Exception:
+            publish_operational_snapshot_failure()
+            LOGGER.exception(
+                "operational_snapshot_failed",
+                extra={"request_id": None, "trace_id": None},
+            )
         return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
     app.include_router(vertical_slice_router)

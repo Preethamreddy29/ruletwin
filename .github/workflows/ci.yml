@@ -140,6 +140,21 @@ jobs:
         with:
           version: 10.18.0
       - run: docker compose --profile full config --quiet
+      - name: Validate Prometheus configuration and alert rules
+        run: >-
+          docker run --rm
+          --entrypoint /bin/promtool
+          --volume "$PWD/deploy/prometheus:/etc/prometheus:ro"
+          prom/prometheus:v3.1.0
+          check config /etc/prometheus/prometheus.yml
+      - name: Exercise Prometheus alert rules
+        run: >-
+          docker run --rm
+          --entrypoint /bin/promtool
+          --volume "$PWD/deploy/prometheus:/etc/prometheus:ro"
+          --workdir /etc/prometheus/tests
+          prom/prometheus:v3.1.0
+          test rules ruletwin-alerts.test.yml
       - run: docker build --file apps/api/Dockerfile --tag ruletwin-api:ci .
       - run: docker build --file apps/web/Dockerfile --tag ruletwin-web:ci .
       - name: Assert non-root images

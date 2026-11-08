@@ -5,6 +5,7 @@ from httpx import AsyncClient
 
 from ruletwin.api.app import create_app
 from ruletwin.config import Settings
+from ruletwin.operations import OperationalSnapshot
 
 
 async def test_liveness_and_readiness(ready_client: AsyncClient) -> None:
@@ -85,3 +86,51 @@ async def test_invalid_content_length_fails_closed(ready_client: AsyncClient) ->
     )
     assert response.status_code == 413
     assert response.json()["code"] == "request-too-large"
+
+
+async def test_metrics_publish_database_backed_operational_snapshot(settings: Settings) -> None:
+    async def ready() -> bool:
+        return True
+
+    async def snapshot() -> OperationalSnapshot:
+        return OperationalSnapshot(
+            outbox_ready=2,
+            outbox_delayed=1,
+            outbox_leased=3,
+            outbox_failed=0,
+            oldest_ready_age_seconds=12.5,
+            simulations_running=4,
+            stale_simulation_runs=0,
+        )
+
+    app = create_app(
+        settings,
+        readiness_probe=ready,
+        operational_snapshot_probe=snapshot,
+    )
+    from httpx import ASGITransport
+
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        response = await client.get("/metrics")
+
+    assert response.status_code == 200
+    assert "ruletwin_operational_snapshot_success 1.0" in response.text
+    assert "ruletwin_database_ready 1.0" in response.text
+    assert "ruletwin_outbox_ready_events 2.0" in response.text
+    assert "ruletwin_outbox_oldest_ready_age_seconds 12.5" in response.text
+    assert "ruletwin_simulations_running 4.0" in response.text
+
+
+async def test_metrics_remain_scrapeable_when_snapshot_fails(settings: Settings) -> None:
+    async def snapshot_failure() -> OperationalSnapshot:
+        raise RuntimeError("database unavailable")
+
+    app = create_app(settings, operational_snapshot_probe=snapshot_failure)
+    from httpx import ASGITransport
+
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        response = await client.get("/metrics")
+
+    assert response.status_code == 200
+    assert "ruletwin_operational_snapshot_success 0.0" in response.text
+    assert "ruletwin_database_ready 0.0" in response.text

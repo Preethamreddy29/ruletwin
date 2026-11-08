@@ -61,6 +61,8 @@ docker compose --profile full up --build --detach
 
 Prometheus is available at `http://localhost:9090`.
 
+Prometheus loads the pilot alert rules from `deploy/prometheus/rules`. Inspect active rules under **Status → Rules** and current/firing alerts under **Alerts**. These local rules do not send notifications because the repository does not prescribe an Alertmanager receiver or store provider credentials. Follow [`pilot-incident-runbook.md`](pilot-incident-runbook.md) when rehearsing an alert.
+
 ## Seed synthetic data
 
 ```powershell

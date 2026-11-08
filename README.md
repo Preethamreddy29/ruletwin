@@ -2,7 +2,7 @@
 
 RuleTwin is a deterministic, tenant-aware change-impact simulator for proposed business-rule changes. It replays synthetic events through baseline and candidate rule versions, compares outcomes, applies a versioned risk policy, and produces reproducible approval evidence.
 
-> **Current state:** The controlled-pilot foundation is merged through PR #25 at `d7365e6`, with all five protected CI checks passing. It includes deterministic simulation and evidence export, tenant-aware authorization, OIDC verification, Auth0-compatible authorization-code/PKCE browser flows, and bounded resource controls. RuleTwin is suitable for synthetic local demonstrations; it is not yet approved for an externally hosted pilot or production use.
+> **Current state:** The controlled-pilot foundation includes deterministic simulation and evidence export, tenant-aware authorization, OIDC verification, Auth0-compatible authorization-code/PKCE browser flows, bounded resource controls, and a locally validated operations/alerting baseline. RuleTwin is suitable for synthetic local demonstrations; it is not yet approved for an externally hosted pilot or production use.
 
 ## Product boundary
 
@@ -18,11 +18,12 @@ The portfolio index and governing sources are maintained in the sibling `enterpr
 - Recoverable worker/outbox execution, append-only audit evidence, and deterministic JSON evidence export.
 - Provider-neutral OIDC token verification plus an Auth0-compatible browser PKCE/login/logout implementation.
 - Request, replay-dataset, per-tenant queue, worker timeout/retry, and pilot worker-concurrency controls.
+- Aggregate database/queue/worker health metrics, eight actionable Prometheus alerts, deterministic alert tests, and an incident runbook.
 - FastAPI, React/TypeScript, PostgreSQL, Docker Compose, OpenAPI, migrations, and protected CI validation.
 
 ## Current milestone
 
-The next milestone is controlled-pilot readiness. Its scope, exclusions, required evidence, and user decisions are defined in [`docs/pilot-readiness-plan.md`](docs/pilot-readiness-plan.md). Actual Auth0 tenant configuration and invited-user evidence, complete exposed-surface isolation, operational telemetry and alerts, reproducible deployment, external secret management, recovery drills, release artifacts, and measured performance/accessibility evidence remain required before an externally hosted pilot.
+The next milestone is controlled-pilot readiness. Its scope, exclusions, required evidence, and user decisions are defined in [`docs/pilot-readiness-plan.md`](docs/pilot-readiness-plan.md). Actual Auth0 tenant configuration and invited-user evidence, complete exposed-surface isolation, hosted log/notification delivery and incident rehearsal, reproducible deployment, external secret management, recovery drills, release artifacts, and measured performance/accessibility evidence remain required before an externally hosted pilot.
 
 ## Run locally
 
@@ -62,6 +63,8 @@ Start with:
 - [`docs/operations/auth0-pilot.md`](docs/operations/auth0-pilot.md)
 - [`docs/validation/pilot-auth0-integration-validation.md`](docs/validation/pilot-auth0-integration-validation.md)
 - [`docs/validation/pilot-resource-safety-validation.md`](docs/validation/pilot-resource-safety-validation.md)
+- [`docs/operations/pilot-incident-runbook.md`](docs/operations/pilot-incident-runbook.md)
+- [`docs/validation/pilot-operations-validation.md`](docs/validation/pilot-operations-validation.md)
 
 ## Security and limitations
 
