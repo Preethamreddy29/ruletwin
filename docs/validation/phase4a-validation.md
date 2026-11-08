@@ -1,5 +1,7 @@
 # Phase 4A Validation Evidence
 
+> Historical phase-closure snapshot. Current repository and pilot status is maintained in [`../progress.md`](../progress.md).
+
 **Date:** 2026-10-24  
 **Original branch:** `codex/phase4a-multitenant-authorization`  
 **Phase 3 base:** `5a13a3e`  

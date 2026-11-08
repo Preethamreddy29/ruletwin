@@ -27,13 +27,19 @@ This increment implements the PILOT-06 foundation without claiming the complete 
 
 - Ruff formatting and lint: passed.
 - Mypy: passed for 27 source files.
-- Python unit suite: 64 passed with 80.20% total coverage.
+- Python unit suite after the CI configuration correction: 65 passed with 80.20% total coverage.
 - OpenAPI validation: passed with 13 paths, 13 operations, and 136 resolved references.
 - Repository secret scan: passed.
 - `git diff --check`: passed.
 - Compose configuration parse: passed.
-- Database-backed integration and container saturation/recovery: not run locally because the Docker engine was unavailable; protected CI is required before merge.
+- Database-backed integration and container checks were not run in the initial local validation because the Docker engine was unavailable.
+
+## Merge and clean-runner evidence
+
+- PR #25 merged to `main` as `d7365e6`.
+- All five required protected checks passed: backend/migrations/integration, contracts/repository security, web quality/build, Playwright critical flow, and Compose/container evidence.
+- The merge establishes the resource-safety implementation foundation; it does not by itself close every PILOT-06 evidence requirement.
 
 ## Remaining evidence
 
-PILOT-06 is not closed by this document alone. A clean protected CI run, container-level timeout/retry recovery, sustained saturation behavior, and measured resource use on the named pilot reference profile remain required. General request-rate limiting is grouped with the next operations/edge-control increment rather than claimed here.
+PILOT-06 is not closed by this document alone. Container-level timeout/retry recovery, sustained saturation behavior, and measured resource use on the named pilot reference profile remain required. General request-rate limiting is grouped with the next operations/edge-control increment rather than claimed here.

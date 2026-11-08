@@ -2,7 +2,7 @@
 
 RuleTwin is a deterministic, tenant-aware change-impact simulator for proposed business-rule changes. It replays synthetic events through baseline and candidate rule versions, compares outcomes, applies a versioned risk policy, and produces reproducible approval evidence.
 
-> **Current state:** Tenant authorization and deterministic evidence export are merged through PR #21 at `257e604`, with protected clean-runner CI passing. A provider-neutral OIDC verification foundation is awaiting merge in PR #22, and the dependent Auth0/PKCE browser integration is under validation. RuleTwin is a validated synthetic-data pilot candidate, not a production-ready service.
+> **Current state:** The controlled-pilot foundation is merged through PR #25 at `d7365e6`, with all five protected CI checks passing. It includes deterministic simulation and evidence export, tenant-aware authorization, OIDC verification, Auth0-compatible authorization-code/PKCE browser flows, and bounded resource controls. RuleTwin is suitable for synthetic local demonstrations; it is not yet approved for an externally hosted pilot or production use.
 
 ## Product boundary
 
@@ -10,11 +10,19 @@ RuleTwin is not a billing engine, no-code rules platform, payment system, featur
 
 The portfolio index and governing sources are maintained in the sibling `enterprise-rule-intelligence` repository. This repository owns RuleTwin's product contracts, architecture decisions, security model, and independently deployable runtime.
 
+## What works now
+
+- Deterministic baseline-versus-candidate replay for a versioned rounding-rule family.
+- Two fictional tenants with PostgreSQL-resolved memberships and role-separated analyst, reviewer, release-approver, and auditor actions.
+- Non-enumerating tenant/object authorization, fail-closed risk decisions, checksum-bound approval and release gates.
+- Recoverable worker/outbox execution, append-only audit evidence, and deterministic JSON evidence export.
+- Provider-neutral OIDC token verification plus an Auth0-compatible browser PKCE/login/logout implementation.
+- Request, replay-dataset, per-tenant queue, worker timeout/retry, and pilot worker-concurrency controls.
+- FastAPI, React/TypeScript, PostgreSQL, Docker Compose, OpenAPI, migrations, and protected CI validation.
+
 ## Current milestone
 
-The implemented workflow preserves deterministic simulation while adding two synthetic tenants, short-lived signed development identities, PostgreSQL-resolved memberships, role-separated analyst/reviewer/release-approver/auditor actions, object-level authorization, non-enumerating cross-tenant denial, and checksum-bound JSON evidence export.
-
-The next milestone is controlled-pilot readiness. Its scope, exclusions, required evidence, and user decisions are defined in [`docs/pilot-readiness-plan.md`](docs/pilot-readiness-plan.md). The browser now has an authorization-code/PKCE implementation and tenant-scoped scenario discovery; actual Auth0 tenant configuration, invited-user provisioning evidence, full-surface isolation, recovery evidence, deployment automation, operational alerting, resource controls, and measured performance remain required before an externally hosted pilot.
+The next milestone is controlled-pilot readiness. Its scope, exclusions, required evidence, and user decisions are defined in [`docs/pilot-readiness-plan.md`](docs/pilot-readiness-plan.md). Actual Auth0 tenant configuration and invited-user evidence, complete exposed-surface isolation, operational telemetry and alerts, reproducible deployment, external secret management, recovery drills, release artifacts, and measured performance/accessibility evidence remain required before an externally hosted pilot.
 
 ## Run locally
 
@@ -53,10 +61,11 @@ Start with:
 - [`docs/validation/pilot-oidc-foundation-validation.md`](docs/validation/pilot-oidc-foundation-validation.md)
 - [`docs/operations/auth0-pilot.md`](docs/operations/auth0-pilot.md)
 - [`docs/validation/pilot-auth0-integration-validation.md`](docs/validation/pilot-auth0-integration-validation.md)
+- [`docs/validation/pilot-resource-safety-validation.md`](docs/validation/pilot-resource-safety-validation.md)
 
 ## Security and limitations
 
-RuleTwin remains pre-release. Development identities are local-only, the OIDC foundation is not a completed provider login integration, only implemented API/UI paths have executable tenant-isolation evidence, and only synthetic data is approved. See [`SECURITY.md`](SECURITY.md) and the pilot-readiness plan before deployment.
+RuleTwin remains pre-release. The OIDC and browser integration code has not yet been validated against a configured hosted provider, development identities are permitted only in local mode, only implemented API/UI paths have executable tenant-isolation evidence, and only synthetic data is approved. See [`SECURITY.md`](SECURITY.md) and the pilot-readiness plan before deployment.
 
 ## License
 
