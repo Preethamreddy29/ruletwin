@@ -12,7 +12,10 @@ FROM python:3.12-slim AS runtime
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PATH="/home/ruletwin/.local/bin:${PATH}"
-RUN groupadd --gid 10001 ruletwin \
+RUN apt-get update \
+    && apt-get upgrade --yes --no-install-recommends \
+    && rm -rf /var/lib/apt/lists/* \
+    && groupadd --gid 10001 ruletwin \
     && useradd --uid 10001 --gid ruletwin --create-home --shell /usr/sbin/nologin ruletwin
 WORKDIR /app
 COPY --from=builder /wheels /wheels

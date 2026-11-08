@@ -1,6 +1,6 @@
 # Controlled Pilot Readiness Plan
 **Status:** Approved implementation baseline  
-**Baseline:** `main` at `e95e3ba`
+**Baseline:** `main` at `d7365e6`
 **Pilot data:** Synthetic data only  
 **Deployment audience:** Invited users only until every exit criterion passes
 ## Objective
@@ -43,6 +43,16 @@ Deliver RuleTwin as a controlled, independently deployable pilot that demonstrat
 6. Run security, isolation, recovery, performance, and usability acceptance.
 7. Publish an immutable `v0.4.0-pilot.1` release only after all gates pass.
 
+## Current workstream status
+
+| Workstream | Status at `d7365e6` |
+|---|---|
+| PILOT-01 Identity | OIDC verification and Auth0-compatible PKCE browser implementation merged; hosted Auth0 configuration and provider evidence pending |
+| PILOT-02 Tenant isolation | Implemented paths covered; complete exposed-surface matrix pending |
+| PILOT-06 Resource safety | Foundation merged through PR #25; sustained saturation, timeout/recovery, and reference-profile evidence pending |
+| PILOT-07 Operations | Next implementation priority |
+| PILOT-03, 04, 05, 08, 09, 10 | Remaining controlled-pilot work |
+
 ## Release gate
 
 The pilot release is blocked unless:
@@ -64,7 +74,7 @@ The pilot release is blocked unless:
 |---|---|
 | Hosting provider and budget | Required |
 | Domain and TLS ownership | Required |
-| OIDC provider and pilot identities | Required |
+| OIDC provider and pilot identities | Auth0 selected for the implementation; tenant ownership, identities, roles, and hosted evidence required |
 | Invitation-only user list and tenant-role assignments | Required |
 | Backup retention and acceptable RPO/RTO | Required |
 | Availability and support window | Required |
@@ -73,4 +83,4 @@ The pilot release is blocked unless:
 
 ## Current assessment
 
-Phase 4A, evidence export, provider-neutral OIDC verification, and Auth0/PKCE browser integration are merged with protected CI evidence. Resource-safety implementation is the current increment. The controlled-pilot release gate is not yet satisfied: Auth0-hosted identity evidence, full-surface isolation, deployment, secrets, recovery, operations, supply-chain release artifacts, performance, and usability acceptance remain.
+Phase 4A, evidence export, provider-neutral OIDC verification, Auth0/PKCE browser integration, and the resource-safety foundation are merged with protected CI evidence. Operations is the next implementation priority, while remaining PILOT-06 evidence must also be completed. The controlled-pilot release gate is not yet satisfied: Auth0-hosted identity evidence, full-surface isolation, deployment, secrets, recovery, operations, supply-chain release artifacts, performance, and usability acceptance remain.

@@ -1,5 +1,7 @@
 # Phase 4A Exit Audit
 
+> Historical phase-closure snapshot. Current repository and pilot status is maintained in [`progress.md`](progress.md).
+
 **Decision:** PASS — Phase 4A is complete and merged.  
 **Merge:** PR #18, commit `cffdb30`  
 **Current verified main:** `d64275f`

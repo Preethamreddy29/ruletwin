@@ -8,6 +8,8 @@
 
 **Status:** Implementation validation complete; provider-hosted evidence pending
 
+**Merged result:** PR #24 at `e95e3ba`; all five required protected checks passed
+
 ## Implemented scope
 
 - Authorization code with PKCE through the maintained `oidc-client-ts` browser client.
@@ -45,11 +47,10 @@ The local Docker Engine was unavailable during the initial workstation validatio
 
 ## Remaining PILOT-01 evidence
 
-- Merge prerequisite PR #22 and this dependent increment through protected clean-runner CI.
 - Create/configure the selected Auth0 tenant, custom API, SPA and Post Login Action.
 - Provision distinct approved pilot subjects and record only redacted evidence.
 - Run deployed browser login/logout and active-session/scenario checks.
 - Exercise provider-hosted invalid-token and signing-key-rotation behavior.
 - Record deployed issuer, audience, JWKS URL, callback/logout URLs, commit, image digests and secret-store references without secrets.
 
-This increment must not be described as completed provider integration or pilot readiness until those external checks pass.
+This merged increment must not be described as completed hosted-provider integration or pilot readiness until those external checks pass.
