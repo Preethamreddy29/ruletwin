@@ -1,5 +1,11 @@
 # Progress and Status
 
+## Update — 2026-11-10, deployment and recovery foundation
+
+Branch `codex/pilot-deployment-recovery-foundation` starts from the operations baseline merged through PR #28 at `b88aa21`. It adds an HTTPS-only standalone pilot topology, immutable image-digest enforcement, internal service networks, mounted database-secret support, automated migration/seed ordering, release-record capture, checksum-bound PostgreSQL backups, isolated restore fingerprinting, and worker-restart evidence capture.
+
+The complete database-backed Python suite passes with 75 tests and 89.01% coverage, plus clean formatting/lint and successful typing across 28 source files. Web lint, typing, 8 component tests, and the production build pass. The pilot Compose contract renders successfully. A live local rehearsal created a 110,494-byte checksum-bound backup in 0.816 seconds, restored it into an isolated database in 6.564 seconds, matched the migration/table/evidence fingerprint, restarted the worker, and removed the temporary database. Hosted image, TLS, secret-store, scheduled-backup, log-redaction, approved RPO/RTO, and release-specific rollback evidence remain required.
+
 ## Update — 2026-11-08, pilot operations baseline in progress
 
 Development branch `codex/pilot-operations-baseline` starts from the refreshed protected `main` baseline at `381febd`. The increment adds aggregate database/queue/worker health metrics, eight actionable Prometheus rules, deterministic alert simulations, automated rule/configuration validation, and an incident runbook. Local validation passed across the database-backed Python suite, web quality/build, Prometheus configuration/rule tests, and the live full stack. It deliberately does not claim centralized hosted logs, notification delivery, operator rehearsal, protected branch evidence, or PILOT-07 closure.
@@ -14,11 +20,11 @@ PILOT-01 also remains open: the Auth0 tenant/application/API and namespaced tena
 
 **As of:** 2026-11-08
 
-**Baseline:** `main` at `381febd`; operations work on `codex/pilot-operations-baseline`
+**Baseline:** `main` at `b88aa21`; deployment/recovery work on `codex/pilot-deployment-recovery-foundation`
 
 **Milestone:** Controlled-pilot readiness implementation
 
-**Overall:** Tenant authorization, checksum-bound evidence export, OIDC verification, Auth0/PKCE browser integration, and the resource-safety foundation are merged with successful protected CI. RuleTwin is suitable for a synthetic local demonstration. It is not approved for an externally hosted pilot or real data.
+**Overall:** Tenant authorization, evidence export, OIDC/Auth0 integration, resource safety, and operations are merged with successful protected CI. Deployment/secrets/recovery automation is implemented on the current branch but still needs live and hosted evidence. RuleTwin is suitable for a synthetic local demonstration. It is not approved for an externally hosted pilot or real data.
 
 ## Completed evidence
 
@@ -47,12 +53,11 @@ PILOT-01 also remains open: the Auth0 tenant/application/API and namespaced tena
 
 The approved implementation baseline is [`docs/pilot-readiness-plan.md`](pilot-readiness-plan.md). Work is ordered as:
 
-1. Complete and merge the operations baseline, then capture hosted log delivery, alert delivery/resolution, and operator-rehearsal evidence.
-2. Complete Auth0-hosted login/logout, invited identity, invalid-token, and rotation evidence.
-3. Complete sustained saturation, timeout/recovery, and reference-profile evidence for PILOT-06.
-4. Add reproducible deployment, external secret storage, backup/restore, and rollback.
-5. Complete security, isolation, recovery, performance, and usability acceptance.
-6. Publish immutable `v0.4.0-pilot.1` artifacts only after every gate passes.
+1. Complete Auth0-hosted login/logout, invited identity, invalid-token, and rotation evidence.
+2. Complete sustained saturation, timeout/recovery, and reference-profile evidence for PILOT-06.
+3. Deploy the reviewed immutable pilot topology and capture provider secret-store, HTTPS, log-redaction, scheduled-backup, restore, rollback, log, and alert-delivery evidence.
+4. Complete supply-chain, security, isolation, performance, accessibility, and operator acceptance.
+5. Publish immutable `v0.4.0-pilot.1` artifacts only after every gate passes.
 
 ## Owner decisions required
 

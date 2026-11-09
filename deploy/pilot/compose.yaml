@@ -1,0 +1,189 @@
+name: ruletwin-pilot
+
+x-api-environment: &api-environment
+  RULETWIN_ENVIRONMENT: staging
+  RULETWIN_DATABASE_URL_FILE: /run/secrets/app_database_url
+  RULETWIN_LOG_LEVEL: ${RULETWIN_LOG_LEVEL:-INFO}
+  RULETWIN_SERVICE_NAME: ruletwin-api
+  RULETWIN_VERSION: ${RULETWIN_RELEASE_VERSION:?Set an immutable release version}
+  RULETWIN_AUTH_MODE: oidc
+  RULETWIN_OIDC_ISSUER: ${RULETWIN_OIDC_ISSUER:?Set the exact HTTPS OIDC issuer}
+  RULETWIN_OIDC_AUDIENCE: ${RULETWIN_OIDC_AUDIENCE:?Set the API audience}
+  RULETWIN_OIDC_JWKS_URL: ${RULETWIN_OIDC_JWKS_URL:?Set the HTTPS JWKS URL}
+  RULETWIN_OIDC_TENANT_CLAIM: ${RULETWIN_OIDC_TENANT_CLAIM:-tenant_id}
+  RULETWIN_CORS_ORIGINS: https://${RULETWIN_HOSTNAME:?Set the pilot hostname}
+  RULETWIN_MAX_REQUEST_BODY_BYTES: ${RULETWIN_MAX_REQUEST_BODY_BYTES:-65536}
+  RULETWIN_MAX_DATASET_EVENTS: ${RULETWIN_MAX_DATASET_EVENTS:-10000}
+  RULETWIN_MAX_PENDING_SIMULATIONS_PER_TENANT: ${RULETWIN_MAX_PENDING_SIMULATIONS_PER_TENANT:-25}
+  RULETWIN_WORKER_EXECUTION_TIMEOUT_SECONDS: ${RULETWIN_WORKER_EXECUTION_TIMEOUT_SECONDS:-30}
+  RULETWIN_WORKER_MAX_ATTEMPTS: ${RULETWIN_WORKER_MAX_ATTEMPTS:-5}
+  RULETWIN_WORKER_RETRY_BASE_SECONDS: ${RULETWIN_WORKER_RETRY_BASE_SECONDS:-2}
+  RULETWIN_WORKER_RETRY_MAX_SECONDS: ${RULETWIN_WORKER_RETRY_MAX_SECONDS:-60}
+  RULETWIN_WORKER_CONCURRENCY: "1"
+
+x-api-security: &api-security
+  read_only: true
+  tmpfs: [/tmp]
+  security_opt: ["no-new-privileges:true"]
+  cap_drop: [ALL]
+  restart: unless-stopped
+
+services:
+  postgres:
+    image: ${RULETWIN_POSTGRES_IMAGE:?Set a PostgreSQL image by digest}
+    environment:
+      POSTGRES_DB: ruletwin
+      POSTGRES_USER: ruletwin_admin
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_admin_password
+      POSTGRES_APP_PASSWORD_FILE: /run/secrets/postgres_app_password
+    secrets:
+      - postgres_admin_password
+      - postgres_app_password
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ../postgres/001-roles.sh:/docker-entrypoint-initdb.d/001-roles.sh:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ruletwin_admin -d ruletwin"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+    networks: [backend]
+    security_opt: ["no-new-privileges:true"]
+    restart: unless-stopped
+
+  migrate:
+    image: ${RULETWIN_API_IMAGE:?Set an API image by digest}
+    environment:
+      <<: *api-environment
+      RULETWIN_DATABASE_URL_FILE: /run/secrets/admin_database_url
+    secrets: [admin_database_url]
+    command: ["alembic", "upgrade", "head"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks: [backend]
+    read_only: true
+    tmpfs: [/tmp]
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: [ALL]
+    restart: "no"
+
+  seed:
+    image: ${RULETWIN_API_IMAGE:?Set an API image by digest}
+    environment: *api-environment
+    secrets: [app_database_url]
+    command: ["ruletwin-seed", "--seed", "ruletwin-pilot-v1"]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    networks: [backend]
+    read_only: true
+    tmpfs: [/tmp]
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: [ALL]
+    restart: "no"
+
+  api:
+    image: ${RULETWIN_API_IMAGE:?Set an API image by digest}
+    environment: *api-environment
+    secrets: [app_database_url]
+    depends_on:
+      seed:
+        condition: service_completed_successfully
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:8000/health/ready', timeout=2)",
+        ]
+      interval: 10s
+      timeout: 3s
+      retries: 6
+    networks: [backend, frontend]
+    <<: *api-security
+
+  worker:
+    image: ${RULETWIN_API_IMAGE:?Set an API image by digest}
+    environment: *api-environment
+    secrets: [app_database_url]
+    command: ["ruletwin-worker"]
+    depends_on:
+      seed:
+        condition: service_completed_successfully
+    networks: [backend]
+    <<: *api-security
+
+  web:
+    image: ${RULETWIN_WEB_IMAGE:?Set a web image by digest}
+    depends_on:
+      api:
+        condition: service_healthy
+    networks: [frontend]
+    read_only: true
+    tmpfs: [/tmp, /var/cache/nginx, /var/run]
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: [ALL]
+    restart: unless-stopped
+
+  prometheus:
+    image: ${RULETWIN_PROMETHEUS_IMAGE:?Set a Prometheus image by digest}
+    command: ["--config.file=/etc/prometheus/prometheus.yml", "--storage.tsdb.path=/prometheus"]
+    volumes:
+      - ../prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ../prometheus/rules:/etc/prometheus/rules:ro
+      - prometheus-data:/prometheus
+    networks: [frontend]
+    read_only: true
+    tmpfs: [/tmp]
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: [ALL]
+    restart: unless-stopped
+
+  gateway:
+    image: ${RULETWIN_GATEWAY_IMAGE:?Set a gateway image by digest}
+    command: ["caddy", "run", "--config", "/etc/caddy/Caddyfile", "--adapter", "caddyfile"]
+    environment:
+      RULETWIN_HOSTNAME: ${RULETWIN_HOSTNAME:?Set the pilot hostname}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - type: bind
+        source: ${RULETWIN_TLS_CERT_FILE:?Set the TLS certificate path}
+        target: /run/tls/tls.crt
+        read_only: true
+      - type: bind
+        source: ${RULETWIN_TLS_KEY_FILE:?Set the TLS private-key path}
+        target: /run/tls/tls.key
+        read_only: true
+    ports: ["${RULETWIN_HTTPS_PORT:-8443}:8443"]
+    depends_on:
+      web:
+        condition: service_started
+    networks: [frontend, edge]
+    read_only: true
+    tmpfs: [/tmp, /data, /config]
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: [ALL]
+    restart: unless-stopped
+
+networks:
+  backend:
+    internal: true
+  frontend:
+    internal: true
+  edge:
+
+volumes:
+  postgres-data:
+  prometheus-data:
+
+secrets:
+  postgres_admin_password:
+    file: ${RULETWIN_POSTGRES_ADMIN_PASSWORD_SECRET_FILE:?Set the admin-password secret file}
+  postgres_app_password:
+    file: ${RULETWIN_POSTGRES_APP_PASSWORD_SECRET_FILE:?Set the app-password secret file}
+  admin_database_url:
+    file: ${RULETWIN_ADMIN_DATABASE_URL_SECRET_FILE:?Set the admin database-URL secret file}
+  app_database_url:
+    file: ${RULETWIN_APP_DATABASE_URL_SECRET_FILE:?Set the app database-URL secret file}

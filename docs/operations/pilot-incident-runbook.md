@@ -33,7 +33,7 @@ Alerts: `RuleTwinOperationalSnapshotFailed`, `RuleTwinOperationalSnapshotStale`
 1. Check `/health/ready` and the `postgres` health state.
 2. Inspect API and PostgreSQL logs around the alert start time.
 3. Confirm that the application role can connect and read the operational tables without changing its grants.
-4. If PostgreSQL is unavailable, stop pilot writes and follow the approved restore/rollback procedure. That procedure remains a separate PILOT-05 deliverable.
+4. If PostgreSQL is unavailable, stop pilot writes and follow [`pilot-deployment-recovery.md`](pilot-deployment-recovery.md). Do not restore over the active database without an isolated fingerprint check and owner approval.
 5. Resolve the cause before clearing the incident; a reachable `/metrics` endpoint alone is not proof that the database snapshot works.
 
 ## Ready work is stalled

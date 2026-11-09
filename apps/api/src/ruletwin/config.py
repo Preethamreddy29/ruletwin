@@ -1,5 +1,6 @@
 from functools import lru_cache
-from typing import Literal
+from pathlib import Path
+from typing import Any, Literal
 
 from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -13,16 +14,19 @@ class Settings(BaseSettings):
         env_prefix="RULETWIN_",
         extra="ignore",
         case_sensitive=False,
+        validate_default=True,
     )
 
     environment: Literal["dev", "test", "staging", "local-prod"]
-    database_url: str = Field(min_length=1)
+    database_url: str = Field(default="", min_length=1)
+    database_url_file: str | None = None
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
     cors_origins: str = "http://localhost:5173,http://localhost:8080"
     service_name: str = "ruletwin-api"
     version: str = "0.3.0-alpha-authz"
     auth_mode: Literal["development", "oidc"] = "development"
     jwt_secret: str | None = Field(default=None, min_length=32)
+    jwt_secret_file: str | None = None
     jwt_issuer: str = "ruletwin-local"
     jwt_audience: str = "ruletwin-api"
     jwt_ttl_seconds: int = Field(default=900, ge=60, le=3600)
@@ -47,6 +51,35 @@ class Settings(BaseSettings):
     worker_retry_base_seconds: int = Field(default=2, ge=1, le=60)
     worker_retry_max_seconds: int = Field(default=60, ge=1, le=600)
     worker_concurrency: int = Field(default=1, ge=1, le=1)
+
+    @model_validator(mode="before")
+    @classmethod
+    def load_mounted_secrets(cls, values: Any) -> Any:
+        if not isinstance(values, dict):
+            return values
+        normalized = dict(values)
+        for value_name, file_name in (
+            ("database_url", "database_url_file"),
+            ("jwt_secret", "jwt_secret_file"),
+        ):
+            value = normalized.get(value_name)
+            secret_file = normalized.get(file_name)
+            if value and secret_file:
+                raise ValueError(f"configure only one of {value_name} or {file_name}")
+            if secret_file:
+                path = Path(str(secret_file))
+                if not path.is_absolute():
+                    raise ValueError(f"{file_name} must be an absolute path")
+                try:
+                    if path.stat().st_size > 16384:
+                        raise ValueError(f"{file_name} exceeds the 16 KiB limit")
+                    secret = path.read_text(encoding="utf-8").rstrip("\r\n")
+                except OSError as exc:
+                    raise ValueError(f"{file_name} cannot be read") from exc
+                if not secret or "\x00" in secret:
+                    raise ValueError(f"{file_name} is empty or invalid")
+                normalized[value_name] = secret
+        return normalized
 
     @field_validator("database_url")
     @classmethod
