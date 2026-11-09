@@ -19,7 +19,7 @@ RUN pnpm install --frozen-lockfile
 COPY apps/web ./apps/web
 RUN pnpm --filter @ruletwin/web build
 
-FROM nginxinc/nginx-unprivileged:1.27-alpine AS runtime
+FROM ghcr.io/nginx/nginx-unprivileged:1.30.6-alpine3.24 AS runtime
 COPY apps/web/nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=builder /workspace/apps/web/dist /usr/share/nginx/html
 USER 101:101

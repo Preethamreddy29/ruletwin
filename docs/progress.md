@@ -1,5 +1,11 @@
 # Progress and Status
 
+## Update — 2026-11-10, supply-chain preflight foundation
+
+Branch `codex/pilot-supply-chain-release` starts from the deployment/recovery foundation merged through PR #30 at `a8a8ad9`. It adds API and web SPDX SBOM generation, JSON high/critical vulnerability reports, fail-closed image gates, immutable local image metadata, checksum-bound evidence manifests, retained pull-request artifacts, and a main-only manual preflight workflow. The workflow deliberately rejects the official pilot version form while other controlled-pilot gates remain open.
+
+Local validation passed: reversible migrations and zero drift; 83 Python tests at 89.01% coverage; web lint, typing, 8 tests, and production build; workflow/OpenAPI/secret validation; both image builds; both SPDX SBOMs; zero unfixed high/critical findings after replacing the unsupported web runtime base; and checksum-bound manifest verification. PILOT-08 is not closed until the protected pull-request workflow and the main preflight workflow both pass and their evidence artifacts are retained.
+
 ## Update — 2026-11-10, deployment and recovery foundation
 
 Branch `codex/pilot-deployment-recovery-foundation` starts from the operations baseline merged through PR #28 at `b88aa21`. It adds an HTTPS-only standalone pilot topology, immutable image-digest enforcement, internal service networks, mounted database-secret support, automated migration/seed ordering, release-record capture, checksum-bound PostgreSQL backups, isolated restore fingerprinting, and worker-restart evidence capture.

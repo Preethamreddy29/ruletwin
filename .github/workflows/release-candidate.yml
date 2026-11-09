@@ -1,0 +1,121 @@
+name: Pilot release candidate evidence
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Preflight version (official pilot releases remain blocked until every gate passes)
+        required: true
+        default: 0.4.0-pilot.preflight.1
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pilot-release-candidate-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  evidence:
+    name: Build immutable candidate evidence
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Enforce preflight-only boundary
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          if [[ ! "$VERSION" =~ ^0\.4\.0-pilot\.preflight\.[1-9][0-9]*$ ]]; then
+            echo "Only 0.4.0-pilot.preflight.N is allowed while other pilot gates remain open" >&2
+            exit 1
+          fi
+      - name: Build candidate images
+        run: |
+          docker build --file apps/api/Dockerfile --tag "ruletwin-api:${{ github.sha }}" .
+          docker build --file apps/web/Dockerfile --tag "ruletwin-web:${{ github.sha }}" .
+          mkdir -p artifacts/release
+      - name: Generate API image SBOM
+        uses: anchore/sbom-action@v0.24.3
+        with:
+          image: ruletwin-api:${{ github.sha }}
+          format: spdx-json
+          output-file: artifacts/release/api-image.spdx.json
+          upload-artifact: false
+          upload-release-assets: false
+      - name: Generate web image SBOM
+        uses: anchore/sbom-action@v0.24.3
+        with:
+          image: ruletwin-web:${{ github.sha }}
+          format: spdx-json
+          output-file: artifacts/release/web-image.spdx.json
+          upload-artifact: false
+          upload-release-assets: false
+      - name: Record immutable image identifiers
+        run: |
+          docker image inspect "ruletwin-api:${{ github.sha }}" > artifacts/release/api-image-inspect.json
+          docker image inspect "ruletwin-web:${{ github.sha }}" > artifacts/release/web-image-inspect.json
+      - name: Record API image vulnerability report
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: ruletwin-api:${{ github.sha }}
+          format: json
+          output: artifacts/release/api-image-trivy.json
+          exit-code: "0"
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+      - name: Record web image vulnerability report
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: ruletwin-web:${{ github.sha }}
+          format: json
+          output: artifacts/release/web-image-trivy.json
+          exit-code: "0"
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          skip-setup-trivy: true
+      - name: Build and verify evidence manifest
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          python scripts/release_evidence.py build-manifest \
+            --version "$VERSION" \
+            --commit "${{ github.sha }}" \
+            --output artifacts/release/manifest.json \
+            --artifact api-sbom=artifacts/release/api-image.spdx.json \
+            --artifact web-sbom=artifacts/release/web-image.spdx.json \
+            --artifact api-scan=artifacts/release/api-image-trivy.json \
+            --artifact web-scan=artifacts/release/web-image-trivy.json \
+            --artifact api-image=artifacts/release/api-image-inspect.json \
+            --artifact web-image=artifacts/release/web-image-inspect.json
+          python scripts/release_evidence.py verify-manifest --manifest artifacts/release/manifest.json
+      - name: Gate API image vulnerabilities
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: ruletwin-api:${{ github.sha }}
+          format: table
+          exit-code: "1"
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          skip-setup-trivy: true
+      - name: Gate web image vulnerabilities
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: ruletwin-web:${{ github.sha }}
+          format: table
+          exit-code: "1"
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          skip-setup-trivy: true
+      - name: Upload immutable candidate evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ruletwin-${{ inputs.version }}-${{ github.sha }}
+          path: artifacts/release
+          if-no-files-found: error
+          retention-days: 90
