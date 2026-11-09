@@ -84,3 +84,45 @@ def test_worker_concurrency_accepts_compose_environment_string(
     monkeypatch.setenv("RULETWIN_WORKER_CONCURRENCY", "1")
 
     assert Settings(_env_file=None).worker_concurrency == 1  # type: ignore[call-arg]
+
+
+def test_configuration_loads_mounted_secret_files(tmp_path, monkeypatch) -> None:  # type: ignore[no-untyped-def]
+    monkeypatch.delenv("RULETWIN_DATABASE_URL", raising=False)
+    monkeypatch.delenv("RULETWIN_JWT_SECRET", raising=False)
+    database_file = tmp_path / "database-url"
+    jwt_file = tmp_path / "jwt-secret"
+    database_file.write_text("postgresql://localhost/ruletwin_test\n", encoding="utf-8")
+    jwt_file.write_text("test-only-mounted-jwt-secret-000000000000\n", encoding="utf-8")
+
+    settings = Settings(
+        environment="test",
+        database_url_file=str(database_file.resolve()),
+        jwt_secret_file=str(jwt_file.resolve()),
+        _env_file=None,
+    )
+
+    assert settings.database_url == "postgresql://localhost/ruletwin_test"
+    assert settings.jwt_secret == "test-only-mounted-jwt-secret-000000000000"
+
+
+def test_configuration_rejects_ambiguous_or_relative_secret_files(tmp_path, monkeypatch) -> None:  # type: ignore[no-untyped-def]
+    monkeypatch.delenv("RULETWIN_DATABASE_URL", raising=False)
+    monkeypatch.delenv("RULETWIN_JWT_SECRET", raising=False)
+    database_file = tmp_path / "database-url"
+    database_file.write_text("postgresql://localhost/ruletwin_test", encoding="utf-8")
+
+    with pytest.raises(ValidationError, match="configure only one"):
+        Settings(
+            environment="test",
+            database_url="postgresql://localhost/ruletwin_test",
+            database_url_file=str(database_file.resolve()),
+            jwt_secret="test-only-ruletwin-jwt-secret-000000000000",
+            _env_file=None,
+        )
+    with pytest.raises(ValidationError, match="absolute path"):
+        Settings(
+            environment="test",
+            database_url_file="relative/database-url",
+            jwt_secret="test-only-ruletwin-jwt-secret-000000000000",
+            _env_file=None,
+        )

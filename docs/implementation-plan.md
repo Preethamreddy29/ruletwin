@@ -19,7 +19,7 @@ The sibling portfolio repository is development provenance, not a RuleTwin runti
 | 2 — Engineering foundation | Complete; merged at `ce437aae` with clean-runner evidence | Repeatable engineering base |
 | 3 — First vertical slice | Complete; merged in PR #13 | Core deterministic workflow is executable |
 | 4A — Multi-tenant authorization | Complete; merged in PR #18 at `cffdb30`; protected CI passed | Tenant boundary is executable for implemented surfaces |
-| Controlled-pilot readiness | In progress; evidence export, provider-neutral OIDC, Auth0/PKCE browser integration, and the resource-safety foundation are merged; provider-hosted and remaining pilot evidence are incomplete | Invitation-only synthetic-data pilot gate |
+| Controlled-pilot readiness | In progress; evidence export, OIDC/Auth0 integration, resource safety, and operations are merged; deployment/secrets/recovery implementation is on the current branch; provider-hosted exit evidence is incomplete | Invitation-only synthetic-data pilot gate |
 
 ## Delivered foundation
 
@@ -36,8 +36,8 @@ The controlling scope is [`pilot-readiness-plan.md`](pilot-readiness-plan.md). D
 1. Completed-simulation evidence export and authorization — merged through PR #21.
 2. Complete real-provider login/logout, invited-subject, invalid-token, and rotation evidence for the merged OIDC/Auth0 implementation.
 3. Request, dataset, execution, queue, retry, and concurrency limits — foundation merged through PR #25; sustained saturation, timeout/recovery, and reference-profile evidence remain before PILOT-06 closure.
-4. Structured operational telemetry, rate controls, actionable alerts, and an incident runbook.
-5. Reproducible HTTPS deployment, external secret management, automated migrations, backups, restore, and rollback.
+4. Structured operational telemetry, actionable alerts, and an incident runbook — merged through PR #28.
+5. Reproducible HTTPS deployment, external secret management, automated migrations, backups, restore, and rollback — implementation foundation on `codex/pilot-deployment-recovery-foundation`; hosted evidence remains required.
 6. Supply-chain artifacts, reference-profile performance evidence, accessibility, and operator acceptance.
 7. Immutable `v0.4.0-pilot.1` release only after every pilot gate passes.
 

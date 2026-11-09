@@ -136,10 +136,38 @@ jobs:
       RULETWIN_JWT_SECRET: ci-jwt-placeholder-at-least-32-characters # gitleaks:allow
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
       - uses: pnpm/action-setup@v4
         with:
           version: 10.18.0
       - run: docker compose --profile full config --quiet
+      - name: Validate standalone pilot deployment contract
+        env:
+          RULETWIN_RELEASE_VERSION: 0.4.0-pilot.ci
+          RULETWIN_HOSTNAME: pilot.example.test
+          RULETWIN_BASE_URL: https://pilot.example.test:8443
+          RULETWIN_OIDC_ISSUER: https://identity.example.test/
+          RULETWIN_OIDC_AUDIENCE: https://api.pilot.example.test
+          RULETWIN_OIDC_JWKS_URL: https://identity.example.test/.well-known/jwks.json
+          RULETWIN_API_IMAGE: registry.example.test/ruletwin-api@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+          RULETWIN_WEB_IMAGE: registry.example.test/ruletwin-web@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+          RULETWIN_POSTGRES_IMAGE: postgres@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+          RULETWIN_PROMETHEUS_IMAGE: prometheus@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+          RULETWIN_GATEWAY_IMAGE: caddy@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+          RULETWIN_POSTGRES_ADMIN_PASSWORD_SECRET_FILE: ${{ runner.temp }}/ruletwin-pilot/admin-password
+          RULETWIN_POSTGRES_APP_PASSWORD_SECRET_FILE: ${{ runner.temp }}/ruletwin-pilot/app-password
+          RULETWIN_ADMIN_DATABASE_URL_SECRET_FILE: ${{ runner.temp }}/ruletwin-pilot/admin-url
+          RULETWIN_APP_DATABASE_URL_SECRET_FILE: ${{ runner.temp }}/ruletwin-pilot/app-url
+          RULETWIN_TLS_CERT_FILE: ${{ runner.temp }}/ruletwin-pilot/tls.crt
+          RULETWIN_TLS_KEY_FILE: ${{ runner.temp }}/ruletwin-pilot/tls.key
+        run: |
+          mkdir -p "${{ runner.temp }}/ruletwin-pilot"
+          for file in admin-password app-password admin-url app-url tls.crt tls.key; do
+            printf 'validation-placeholder' > "${{ runner.temp }}/ruletwin-pilot/$file"
+          done
+          python scripts/pilot.py --compose-file deploy/pilot/compose.yaml validate-config
       - name: Validate Prometheus configuration and alert rules
         run: >-
           docker run --rm
