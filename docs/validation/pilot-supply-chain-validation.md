@@ -1,7 +1,9 @@
 # Pilot Supply-Chain Validation
 
-**Date:** 2026-11-10  
-**Scope:** Repository implementation evidence for PILOT-08  
+**Date:** 2026-11-10
+
+**Scope:** Repository implementation evidence for PILOT-08
+
 **Branch:** `codex/pilot-supply-chain-release`
 
 ## Implemented controls
