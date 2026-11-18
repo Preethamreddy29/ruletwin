@@ -279,6 +279,23 @@ jobs:
           uname -a
           lscpu
           free -h
+      - name: Measure synthetic performance smoke profile
+        run: >-
+          python scripts/performance.py
+          --profile-name github-actions-pr-smoke-v1
+          --acceptance-samples 5
+          --acceptance-p95-target-ms 750
+          --replay-events 1000
+          --replay-samples 1
+          --output artifacts/performance/pr-smoke.json
+      - name: Upload performance smoke evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ruletwin-performance-smoke-${{ github.sha }}
+          path: artifacts/performance
+          if-no-files-found: warn
+          retention-days: 30
       - name: Upload supply-chain evidence
         if: always()
         uses: actions/upload-artifact@v4

@@ -30,4 +30,4 @@
 
 ## Exit assessment
 
-The repository-side PILOT-08 mechanism passes local validation. PILOT-08 closes only after the protected pull-request workflow and the `main` preflight workflow both pass and their GitHub Actions artifacts are retained as release-candidate evidence. Official `v0.4.0-pilot.1` publication remains blocked until every controlled-pilot gate passes.
+PILOT-08 is closed. PR #31 passed all five protected checks and merged as `d9b1fa9`. Main preflight run `44348823858` passed for `0.4.0-pilot.preflight.1`; its 539,754-byte artifact `ruletwin-0.4.0-pilot.preflight.1-d9b1fa9d8fc68d81a4fcff8d5e9f3c2a5823d32e` is retained until 2027-02-16. Official `v0.4.0-pilot.1` publication remains blocked until every other controlled-pilot gate passes.

@@ -1,0 +1,75 @@
+name: Pilot performance evidence
+
+on:
+  workflow_dispatch:
+    inputs:
+      profile_name:
+        description: Named synthetic reference profile
+        required: true
+        default: github-actions-pilot-reference-v1
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pilot-performance-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  measure:
+    name: Measure acceptance and replay
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    env:
+      POSTGRES_DB: ruletwin
+      POSTGRES_USER: ruletwin_admin
+      POSTGRES_PASSWORD: performance-admin-placeholder
+      POSTGRES_APP_PASSWORD: performance-app-placeholder
+      POSTGRES_TEST_PASSWORD: performance-test-placeholder
+      RULETWIN_JWT_SECRET: performance-jwt-placeholder-at-least-32-characters # gitleaks:allow
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Start exact merged core profile
+        run: docker compose --profile core up --build --detach
+      - name: Wait for readiness
+        run: |
+          for attempt in $(seq 1 60); do
+            if curl --fail --silent http://localhost:8000/health/ready >/dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          exit 1
+      - name: Capture runner profile
+        run: |
+          uname -a
+          lscpu
+          free -h
+          docker version
+      - name: Measure protected synthetic profile
+        run: >-
+          python scripts/performance.py
+          --profile-name "${{ inputs.profile_name }}"
+          --acceptance-samples 30
+          --acceptance-p95-target-ms 750
+          --replay-events 10000
+          --replay-samples 3
+          --output artifacts/performance/report.json
+      - name: Upload immutable performance evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ruletwin-performance-${{ github.sha }}
+          path: artifacts/performance
+          if-no-files-found: error
+          retention-days: 90
+      - name: Capture diagnostics
+        if: failure()
+        run: docker compose --profile core logs --tail 200 api worker postgres
+      - name: Stop services
+        if: always()
+        run: docker compose --profile core down --volumes
