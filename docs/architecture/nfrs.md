@@ -21,3 +21,7 @@ Targets are hypotheses until measured on a named local machine. Hard isolation a
 ## Measurement rule
 
 Every result must record commit/version, dataset, machine profile, command, sample count and raw report. A plan or synthetic expectation is not a passing measurement.
+
+## Measured pilot baseline
+
+On 2026-11-18, commit `d9b1fa9` was measured on the named `sunny-windows-docker-reference-v1` profile (Windows 11, Docker Desktop, 12 logical CPUs). Thirty one-event simulation acknowledgements produced a nearest-rank P95 of 87.457 ms against the 750 ms target. Three 10,000-event replays completed in 8.409–8.894 seconds and produced an identical result checksum. This is a synthetic controlled-pilot baseline, not an SLA or a 100,000-event scale claim. The raw local report is generated under ignored `artifacts/performance`; protected and main-branch evidence remain required by PILOT-09.

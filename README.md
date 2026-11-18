@@ -21,11 +21,12 @@ The portfolio index and governing sources are maintained in the sibling `enterpr
 - Aggregate database/queue/worker health metrics, eight actionable Prometheus alerts, deterministic alert tests, and an incident runbook.
 - An HTTPS-only pilot topology with immutable-image enforcement, mounted secrets, automated migrations, deployment records, checksum-bound backups, and isolated restore verification.
 - API/web SPDX SBOMs, high/critical vulnerability gates, checksum-bound evidence manifests, and retained preflight workflow artifacts.
+- Reproducible synthetic performance measurement with raw acknowledgement samples, named machine profiles, and deterministic 10,000-event replay evidence.
 - FastAPI, React/TypeScript, PostgreSQL, Docker Compose, OpenAPI, migrations, and protected CI validation.
 
 ## Current milestone
 
-The next milestone is controlled-pilot readiness. Its scope, exclusions, required evidence, and user decisions are defined in [`docs/pilot-readiness-plan.md`](docs/pilot-readiness-plan.md). Actual Auth0 tenant configuration and invited-user evidence, complete exposed-surface isolation, hosted deployment/log/notification evidence, provider secret-store evidence, hosted recovery drills, protected preflight artifacts, and measured performance/accessibility evidence remain required before an externally hosted pilot.
+The next milestone is controlled-pilot readiness. Its scope, exclusions, required evidence, and user decisions are defined in [`docs/pilot-readiness-plan.md`](docs/pilot-readiness-plan.md). Actual Auth0 tenant configuration and invited-user evidence, complete exposed-surface isolation, hosted deployment/log/notification evidence, provider secret-store evidence, hosted recovery drills, protected performance evidence, and accessibility/operator acceptance remain required before an externally hosted pilot.
 
 ## Run locally
 
@@ -71,6 +72,8 @@ Start with:
 - [`docs/validation/pilot-deployment-recovery-validation.md`](docs/validation/pilot-deployment-recovery-validation.md)
 - [`docs/operations/pilot-release-evidence.md`](docs/operations/pilot-release-evidence.md)
 - [`docs/validation/pilot-supply-chain-validation.md`](docs/validation/pilot-supply-chain-validation.md)
+- [`docs/operations/pilot-performance.md`](docs/operations/pilot-performance.md)
+- [`docs/validation/pilot-performance-validation.md`](docs/validation/pilot-performance-validation.md)
 
 ## Security and limitations
 
