@@ -51,10 +51,11 @@ Deliver RuleTwin as a controlled, independently deployable pilot that demonstrat
 | PILOT-02 Tenant isolation | Implemented paths covered; complete exposed-surface matrix pending |
 | PILOT-06 Resource safety | Foundation merged through PR #25; sustained saturation, timeout/recovery, and reference-profile evidence pending |
 | PILOT-07 Operations | Implementation merged through PR #28; hosted log/notification delivery and operator rehearsal pending |
-| PILOT-03 Deployment | HTTPS/internal-network Compose topology, digest enforcement, automated migration/seed ordering, and deployment-record tooling implemented on the current branch; hosted deployment record pending |
-| PILOT-04 Secrets | File-mounted application/database secret support and external-secret configuration contract implemented on the current branch; provider secret-store and hosted log-redaction evidence pending |
-| PILOT-05 Recovery | Checksum-bound backup and isolated fingerprinted restore/worker-restart tooling implemented on the current branch; live and hosted rehearsals plus approved RPO/RTO pending |
-| PILOT-08, 09, 10 | Remaining controlled-pilot work |
+| PILOT-03 Deployment | HTTPS/internal-network Compose topology, digest enforcement, automated migration/seed ordering, and deployment-record tooling merged through PR #30; hosted deployment record pending |
+| PILOT-04 Secrets | File-mounted application/database secret support and external-secret configuration contract merged through PR #30; provider secret-store and hosted log-redaction evidence pending |
+| PILOT-05 Recovery | Checksum-bound backup and isolated fingerprinted restore/worker-restart tooling merged through PR #30; hosted rehearsal plus approved RPO/RTO pending |
+| PILOT-08 Supply chain | API/web SBOM, vulnerability reports/gates, immutable local IDs, and checksum-bound preflight evidence implemented on the current branch; protected/main artifact evidence pending |
+| PILOT-09, 10 | Remaining controlled-pilot work |
 
 ## Release gate
 
@@ -86,4 +87,4 @@ The pilot release is blocked unless:
 
 ## Current assessment
 
-Phase 4A, evidence export, OIDC/Auth0 integration, resource safety, and the operations baseline are merged with protected CI evidence through PR #28 at `b88aa21`. The current branch adds the repository-side deployment, external-secret, backup, restore, and rollback foundation. The controlled-pilot release gate is not yet satisfied: Auth0-hosted identity evidence, full-surface isolation, hosted deployment/secrets/recovery/operations evidence, remaining resource-safety evidence, supply-chain release artifacts, performance, and usability acceptance remain.
+Phase 4A, evidence export, OIDC/Auth0 integration, resource safety, operations, and deployment/recovery are merged with protected CI evidence through PR #30 at `a8a8ad9`. The current branch adds repository-side supply-chain and preflight release evidence. The controlled-pilot release gate is not yet satisfied: Auth0-hosted identity evidence, full-surface isolation, hosted deployment/secrets/recovery/operations evidence, remaining resource-safety evidence, protected preflight artifacts, performance, and usability acceptance remain.

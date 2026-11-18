@@ -185,10 +185,82 @@ jobs:
           test rules ruletwin-alerts.test.yml
       - run: docker build --file apps/api/Dockerfile --tag ruletwin-api:ci .
       - run: docker build --file apps/web/Dockerfile --tag ruletwin-web:ci .
+      - run: mkdir -p artifacts/release
       - name: Assert non-root images
         run: |
           test "$(docker image inspect --format '{{.Config.User}}' ruletwin-api:ci)" = "10001:10001"
           test "$(docker image inspect --format '{{.Config.User}}' ruletwin-web:ci)" = "101:101"
+      - name: Generate API image SBOM
+        uses: anchore/sbom-action@v0.24.3
+        with:
+          image: ruletwin-api:ci
+          format: spdx-json
+          output-file: artifacts/release/api-image.spdx.json
+          upload-artifact: false
+          upload-release-assets: false
+      - name: Generate web image SBOM
+        uses: anchore/sbom-action@v0.24.3
+        with:
+          image: ruletwin-web:ci
+          format: spdx-json
+          output-file: artifacts/release/web-image.spdx.json
+          upload-artifact: false
+          upload-release-assets: false
+      - name: Record immutable local image identifiers
+        run: |
+          docker image inspect ruletwin-api:ci > artifacts/release/api-image-inspect.json
+          docker image inspect ruletwin-web:ci > artifacts/release/web-image-inspect.json
+      - name: Record API image vulnerability report
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: ruletwin-api:ci
+          format: json
+          output: artifacts/release/api-image-trivy.json
+          exit-code: "0"
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+      - name: Record web image vulnerability report
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: ruletwin-web:ci
+          format: json
+          output: artifacts/release/web-image-trivy.json
+          exit-code: "0"
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          skip-setup-trivy: true
+      - name: Build and verify checksum-bound supply-chain manifest
+        run: |
+          python scripts/release_evidence.py build-manifest \
+            --version "0.4.0-pilot.preflight.${{ github.run_number }}" \
+            --commit "${{ github.sha }}" \
+            --output artifacts/release/manifest.json \
+            --artifact api-sbom=artifacts/release/api-image.spdx.json \
+            --artifact web-sbom=artifacts/release/web-image.spdx.json \
+            --artifact api-scan=artifacts/release/api-image-trivy.json \
+            --artifact web-scan=artifacts/release/web-image-trivy.json \
+            --artifact api-image=artifacts/release/api-image-inspect.json \
+            --artifact web-image=artifacts/release/web-image-inspect.json
+          python scripts/release_evidence.py verify-manifest \
+            --manifest artifacts/release/manifest.json
+      - name: Gate API image on high and critical vulnerabilities
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: ruletwin-api:ci
+          format: table
+          exit-code: "1"
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          skip-setup-trivy: true
+      - name: Gate web image on high and critical vulnerabilities
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: ruletwin-web:ci
+          format: table
+          exit-code: "1"
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          skip-setup-trivy: true
       - name: Start and smoke-test core services
         run: |
           started_at=$(date +%s)
@@ -207,13 +279,14 @@ jobs:
           uname -a
           lscpu
           free -h
-      - uses: aquasecurity/trivy-action@v0.35.0
+      - name: Upload supply-chain evidence
+        if: always()
+        uses: actions/upload-artifact@v4
         with:
-          image-ref: ruletwin-api:ci
-          format: table
-          exit-code: "1"
-          severity: CRITICAL,HIGH
-          ignore-unfixed: true
+          name: ruletwin-supply-chain-${{ github.sha }}
+          path: artifacts/release
+          if-no-files-found: warn
+          retention-days: 30
       - name: Stop test services
         if: always()
         run: docker compose --profile full down --volumes
