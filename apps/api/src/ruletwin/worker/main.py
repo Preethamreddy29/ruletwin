@@ -18,6 +18,10 @@ def retry_delay_seconds(attempt: int, *, base_seconds: int, max_seconds: int) ->
     return int(min(max_seconds, base_seconds * (2 ** max(0, attempt - 1))))
 
 
+def exception_message(exc: Exception) -> str:
+    return str(exc).strip() or type(exc).__name__
+
+
 async def run() -> None:
     settings = get_settings()
     configure_logging(settings.log_level)
@@ -57,6 +61,7 @@ async def run() -> None:
                         extra={"request_id": str(event.id), "trace_id": str(event.id)},
                     )
             except Exception as exc:
+                error_message = exception_message(exc)
                 LOGGER.exception(
                     "outbox_event_processing_failed",
                     extra={"request_id": str(event.id), "trace_id": str(event.id)},
@@ -72,7 +77,7 @@ async def run() -> None:
                                 WHERE id=:id AND status='pending'
                                 """
                             ),
-                            {"id": event.id, "error": str(exc)[:1000]},
+                            {"id": event.id, "error": error_message[:1000]},
                         )
                         await session.execute(
                             text(
@@ -103,7 +108,7 @@ async def run() -> None:
                                 WHERE id=:id AND status='pending'
                                 """
                             ),
-                            {"id": event.id, "error": str(exc)[:1000], "delay": delay},
+                            {"id": event.id, "error": error_message[:1000], "delay": delay},
                         )
     finally:
         await database.dispose()

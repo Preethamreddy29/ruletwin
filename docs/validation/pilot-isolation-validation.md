@@ -30,4 +30,4 @@
 
 ## Exit assessment
 
-PILOT-02 remains open until local integration/container validation and all five protected pull-request checks pass. The assessment applies to the exact current pilot surface only; any added route, artifact, label, port, operator API, or webhook reopens the gate.
+PR #35 passed all five protected checks in run `44447233869` and was squash-merged to `main` as `e43f5b5`. PILOT-02 is closed for the exact current pilot surface. Any added route, artifact, metric label, published port, operator API, or webhook reopens the gate and must be added to the inventory and negative matrix.

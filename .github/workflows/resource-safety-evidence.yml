@@ -1,0 +1,56 @@
+name: Pilot resource-safety evidence
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pilot-resource-safety-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  exercise:
+    name: Exercise saturation, timeout and recovery
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    env:
+      POSTGRES_DB: ruletwin
+      POSTGRES_USER: ruletwin_admin
+      POSTGRES_PASSWORD: resource-admin-placeholder
+      POSTGRES_APP_PASSWORD: resource-app-placeholder
+      POSTGRES_TEST_PASSWORD: resource-test-placeholder
+      RULETWIN_JWT_SECRET: resource-jwt-placeholder-at-least-32-characters # gitleaks:allow
+      RULETWIN_MAX_PENDING_SIMULATIONS_PER_TENANT: "5"
+      RULETWIN_WORKER_EXECUTION_TIMEOUT_SECONDS: "1"
+      RULETWIN_WORKER_POLL_SECONDS: "0.1"
+      RULETWIN_WORKER_RETRY_BASE_SECONDS: "1"
+      RULETWIN_RESOURCE_DATABASE_URL: postgresql://ruletwin_app:resource-app-placeholder@127.0.0.1:5432/ruletwin # gitleaks:allow
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install -e .
+      - run: docker compose --profile core up --build --detach
+      - name: Capture bounded resource-safety evidence
+        run: >-
+          python scripts/resource_safety.py
+          --profile-name github-actions-main-resource-v1
+          --saturation-limit 5
+          --output artifacts/resource-safety/report.json
+      - name: Upload immutable resource-safety evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ruletwin-resource-safety-${{ github.sha }}
+          path: artifacts/resource-safety
+          if-no-files-found: error
+          retention-days: 90
+      - name: Capture diagnostics
+        if: failure()
+        run: docker compose --profile core logs --tail 200 api worker postgres
+      - name: Stop services
+        if: always()
+        run: docker compose --profile core down --volumes

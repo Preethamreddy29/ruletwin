@@ -2,7 +2,7 @@
 
 ## Scope
 
-This increment implements the PILOT-06 foundation without claiming the complete pilot gate. It adds configurable request-body and replay-dataset limits, atomic per-tenant simulation admission, bounded worker execution and retries, capped exponential retry delay, and explicit single-process worker concurrency.
+The merged foundation plus the `codex/pilot-resource-safety-evidence` increment implement the repository-controlled PILOT-06 gate: configurable request-body and replay-dataset limits, atomic per-tenant simulation admission, bounded worker execution and retries, capped exponential retry delay, explicit single-process worker concurrency, and retained saturation/recovery evidence.
 
 ## Implemented controls
 
@@ -22,6 +22,8 @@ This increment implements the PILOT-06 foundation without claiming the complete 
 - Integration coverage proves per-tenant queue saturation fails with `queue-capacity-exceeded`.
 - Worker unit coverage verifies maximum-attempt claim binding and capped retry delay.
 - OpenAPI describes `413` and `429` resource-limit responses.
+- `scripts/resource_safety.py` stops the worker, fills the configured queue, proves fail-closed rejection and idempotent replay, drains the queue, forces a worker execution timeout with a database row lock, and proves retry recovery.
+- The evidence record includes the commit, named machine profile, timings, deterministic result checksums, attempt/final-state data, and measured API/worker container statistics.
 
 ## Local validation — 2026-10-28
 
@@ -38,8 +40,17 @@ This increment implements the PILOT-06 foundation without claiming the complete 
 
 - PR #25 merged to `main` as `d7365e6`.
 - All five required protected checks passed: backend/migrations/integration, contracts/repository security, web quality/build, Playwright critical flow, and Compose/container evidence.
-- The merge establishes the resource-safety implementation foundation; it does not by itself close every PILOT-06 evidence requirement.
+- The merge establishes the resource-safety implementation foundation.
 
-## Remaining evidence
+## Local saturation and recovery evidence — 2026-11-19
 
-PILOT-06 is not closed by this document alone. Container-level timeout/retry recovery, sustained saturation behavior, and measured resource use on the named pilot reference profile remain required. General request-rate limiting is grouped with the next operations/edge-control increment rather than claimed here.
+- Profile: `sunny-windows-docker-resource-v1`, Windows 11, 12 logical CPUs.
+- Queue limit: 5; accepted: 5; next request rejected with `queue-capacity-exceeded`.
+- Idempotent retry returned the original simulation identifier while saturated.
+- All 5 admitted simulations completed in 6.614 seconds with one deterministic result checksum.
+- A forced one-second worker timeout was stored as `TimeoutError`; the same outbox item completed on attempt 2 after the lock was released.
+- API snapshot: 0.18% CPU and 71.82 MiB memory. Worker snapshot: 4.23% CPU and 60.95 MiB memory. These are observed evidence, not capacity guarantees.
+
+## Exit assessment
+
+Local saturation, timeout/recovery, and measured-container evidence passes. PILOT-06 closes only after the five protected pull-request checks pass and the main-only resource-safety workflow retains its artifact. General edge request-rate limiting is an operational defense in depth and is not represented as a replacement for the queue and execution limits proven here.
