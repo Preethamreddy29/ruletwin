@@ -30,11 +30,12 @@ Use this checklist for the final operator-led rehearsal of the synthetic RuleTwi
 
 ## Automated evidence to attach
 
-- Protected CI URL and commit: Pending merged branch evidence.
-- Main usability workflow URL and artifact: Pending merged `main` evidence.
-- Playwright allow/block result: Pending retained workflow artifact.
-- Accessibility scan result: Pending retained workflow artifact.
-- Mobile keyboard result: Pending retained workflow artifact.
+- Protected CI: PR #33, run `44443944501`, head `50ee0e96438141701353bc9257492848fa32fea7`; all five checks passed.
+- Main usability workflow: run `44444505199` on `52ee56f6a5d797d8d6042aecaa9bdefebd524499`.
+- Retained artifact: `ruletwin-usability-52ee56f6a5d797d8d6042aecaa9bdefebd524499`, artifact ID `14493046072`, retained until 2027-02-17.
+- Playwright allow/block result: Passed in protected CI and the main usability workflow.
+- Accessibility scan result: Passed with zero serious or critical axe violations.
+- Mobile keyboard result: Passed at the 390-by-844 reference viewport.
 
 ## Findings
 

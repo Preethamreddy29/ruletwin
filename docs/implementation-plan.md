@@ -19,7 +19,7 @@ The sibling portfolio repository is development provenance, not a RuleTwin runti
 | 2 — Engineering foundation | Complete; merged at `ce437aae` with clean-runner evidence | Repeatable engineering base |
 | 3 — First vertical slice | Complete; merged in PR #13 | Core deterministic workflow is executable |
 | 4A — Multi-tenant authorization | Complete; merged in PR #18 at `cffdb30`; protected CI passed | Tenant boundary is executable for implemented surfaces |
-| Controlled-pilot readiness | In progress; supply-chain and performance gates are closed; usability/accessibility technical evidence is under development; provider-hosted exit evidence is incomplete | Invitation-only synthetic-data pilot gate |
+| Controlled-pilot readiness | In progress; supply-chain, performance, and usability/accessibility technical evidence are complete; signed operator and provider-hosted exit evidence are incomplete | Invitation-only synthetic-data pilot gate |
 
 ## Delivered foundation
 
@@ -40,7 +40,7 @@ The controlling scope is [`pilot-readiness-plan.md`](pilot-readiness-plan.md). D
 5. Reproducible HTTPS deployment, external secret management, automated migrations, backups, restore, and rollback — implementation foundation merged through PR #30; hosted evidence remains required.
 6. Supply-chain artifacts — merged through PR #31 with successful protected and main preflight evidence.
 7. Reference-profile performance evidence — closed through PR #32 and main run `44353040583`.
-8. Accessibility technical evidence and operator acceptance — pagination, retry/focus behavior, and browser checks are on `codex/pilot-usability-acceptance`; signed rehearsal remains human-owned.
+8. Accessibility technical evidence and operator acceptance — repository evidence complete through PR #33 and main run `44444505199`; signed rehearsal remains human-owned.
 9. Immutable `v0.4.0-pilot.1` release only after every pilot gate passes.
 
 ## Non-negotiable constraints
