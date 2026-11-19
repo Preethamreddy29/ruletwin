@@ -41,7 +41,8 @@ The controlling scope is [`pilot-readiness-plan.md`](pilot-readiness-plan.md). D
 6. Supply-chain artifacts — merged through PR #31 with successful protected and main preflight evidence.
 7. Reference-profile performance evidence — closed through PR #32 and main run `44353040583`.
 8. Accessibility technical evidence and operator acceptance — repository evidence complete through PR #33 and main run `44444505199`; signed rehearsal remains human-owned.
-9. Immutable `v0.4.0-pilot.1` release only after every pilot gate passes.
+9. Full current-surface tenant-isolation closeout — exact route/network/operator inventory and expanded negative evidence on `codex/pilot-isolation-closeout`.
+10. Immutable `v0.4.0-pilot.1` release only after every pilot gate passes.
 
 ## Non-negotiable constraints
 

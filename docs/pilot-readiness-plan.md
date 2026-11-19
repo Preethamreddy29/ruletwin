@@ -48,7 +48,7 @@ Deliver RuleTwin as a controlled, independently deployable pilot that demonstrat
 | Workstream | Status at `67006a9` plus the current development branch |
 |---|---|
 | PILOT-01 Identity | OIDC verification and Auth0-compatible PKCE browser implementation merged; hosted Auth0 configuration and provider evidence pending |
-| PILOT-02 Tenant isolation | Implemented paths covered; complete exposed-surface matrix pending |
+| PILOT-02 Tenant isolation | Exact route/network/operator matrix, expanded negatives, aggregate metric redaction, and pilot edge blocking are on `codex/pilot-isolation-closeout`; protected evidence pending |
 | PILOT-06 Resource safety | Foundation merged through PR #25; sustained saturation, timeout/recovery, and reference-profile evidence pending |
 | PILOT-07 Operations | Implementation merged through PR #28; hosted log/notification delivery and operator rehearsal pending |
 | PILOT-03 Deployment | HTTPS/internal-network Compose topology, digest enforcement, automated migration/seed ordering, and deployment-record tooling merged through PR #30; hosted deployment record pending |
