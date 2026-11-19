@@ -1,4 +1,5 @@
 import asyncio
+import re
 from uuid import UUID
 
 from httpx import AsyncClient
@@ -6,6 +7,7 @@ from httpx import AsyncClient
 from ruletwin.api.app import create_app
 from ruletwin.config import Settings
 from ruletwin.operations import OperationalSnapshot
+from ruletwin.scenario import SECOND_TENANT_ID, TENANT_ID
 
 
 async def test_liveness_and_readiness(ready_client: AsyncClient) -> None:
@@ -119,6 +121,15 @@ async def test_metrics_publish_database_backed_operational_snapshot(settings: Se
     assert "ruletwin_outbox_ready_events 2.0" in response.text
     assert "ruletwin_outbox_oldest_ready_age_seconds 12.5" in response.text
     assert "ruletwin_simulations_running 4.0" in response.text
+    for tenant_value in (
+        "novabill",
+        "brightline",
+        str(TENANT_ID),
+        str(SECOND_TENANT_ID),
+    ):
+        assert tenant_value not in response.text.lower()
+    label_names = set(re.findall(r"(?<=[{,])([A-Za-z_][A-Za-z0-9_]*)=", response.text))
+    assert label_names.isdisjoint({"tenant", "tenant_id", "user_id", "object_id"})
 
 
 async def test_metrics_remain_scrapeable_when_snapshot_fails(settings: Settings) -> None:

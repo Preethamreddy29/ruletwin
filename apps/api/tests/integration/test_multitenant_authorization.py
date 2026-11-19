@@ -18,6 +18,7 @@ from ruletwin.scenario import (
     POLICY_ID,
     REVIEWER_ID,
     RULE_DEFINITION_ID,
+    SECOND_APPROVER_ID,
     SECOND_AUDITOR_ID,
     SECOND_REVIEWER_ID,
     SECOND_TENANT_ID,
@@ -54,6 +55,7 @@ async def test_multitenant_role_and_object_authorization_matrix() -> None:
         "approver": issue_token(settings, APPROVER_ID, TENANT_ID),
         "auditor": issue_token(settings, AUDITOR_ID, TENANT_ID),
         "foreign_reviewer": issue_token(settings, SECOND_REVIEWER_ID, SECOND_TENANT_ID),
+        "foreign_approver": issue_token(settings, SECOND_APPROVER_ID, SECOND_TENANT_ID),
         "foreign_auditor": issue_token(settings, SECOND_AUDITOR_ID, SECOND_TENANT_ID),
     }
     try:
@@ -96,6 +98,34 @@ async def test_multitenant_role_and_object_authorization_matrix() -> None:
             )
             assert denied_rule.status_code == 404
 
+            cross_tenant_rule = await client.post(
+                f"/v1/tenants/{SECOND_TENANT_ID}/rule-versions",
+                headers=_headers(tokens["author"], idempotency=True),
+                json={
+                    "definition_id": str(RULE_DEFINITION_ID),
+                    "family": "rounding",
+                    "effective_from": "2026-10-01",
+                    "effective_until": None,
+                    "timezone": "UTC",
+                    "rule": {"increment_minor_units": 9, "mode": "half_up"},
+                    "dependency_version_ids": [],
+                },
+            )
+            assert cross_tenant_rule.status_code == 404
+
+            cross_tenant_dataset = await client.post(
+                "/v1/replay-datasets",
+                headers=_headers(tokens["author"], idempotency=True),
+                json={
+                    "tenant_id": str(SECOND_TENANT_ID),
+                    "seed": 314159,
+                    "generator_version": "rounding-events-v1",
+                    "event_schema_version": "business-event-v1",
+                    "event_count": 100,
+                },
+            )
+            assert cross_tenant_dataset.status_code == 404
+
             candidate = await client.post(
                 f"/v1/tenants/{TENANT_ID}/rule-versions",
                 headers=_headers(tokens["author"], idempotency=True),
@@ -125,6 +155,20 @@ async def test_multitenant_role_and_object_authorization_matrix() -> None:
             assert requested.status_code == 202
             simulation_id = requested.json()["id"]
 
+            cross_tenant_simulation = await client.post(
+                "/v1/simulations",
+                headers=_headers(tokens["author"], idempotency=True),
+                json={
+                    "tenant_id": str(SECOND_TENANT_ID),
+                    "baseline_rule_version_id": str(BASELINE_RULE_VERSION_ID),
+                    "candidate_rule_version_id": candidate.json()["id"],
+                    "dataset_manifest_id": str(DATASET_ID),
+                    "engine_version": "rounding-engine-v1",
+                    "risk_policy_version_id": str(POLICY_ID),
+                },
+            )
+            assert cross_tenant_simulation.status_code == 404
+
             foreign = await client.get(
                 f"/v1/simulations/{simulation_id}",
                 headers=_headers(tokens["foreign_reviewer"]),
@@ -136,6 +180,17 @@ async def test_multitenant_role_and_object_authorization_matrix() -> None:
             assert foreign.status_code == absent.status_code == 404
             assert foreign.json()["code"] == absent.json()["code"] == "not-found"
             assert foreign.json()["detail"] == absent.json()["detail"]
+
+            foreign_impact = await client.get(
+                f"/v1/simulations/{simulation_id}/impact",
+                headers=_headers(tokens["foreign_reviewer"]),
+            )
+            absent_impact = await client.get(
+                f"/v1/simulations/{uuid.uuid4()}/impact",
+                headers=_headers(tokens["foreign_reviewer"]),
+            )
+            assert foreign_impact.status_code == absent_impact.status_code == 404
+            assert foreign_impact.json()["detail"] == absent_impact.json()["detail"]
 
             same_tenant = await client.get(
                 f"/v1/simulations/{simulation_id}",
@@ -192,6 +247,20 @@ async def test_multitenant_role_and_object_authorization_matrix() -> None:
             )
             assert denied_approval.status_code == 404
 
+            foreign_approval = await client.post(
+                f"/v1/simulations/{simulation_id}/approvals",
+                headers={
+                    **_headers(tokens["foreign_reviewer"], idempotency=True),
+                    "If-Match": f'"{completed.json()["version"]}"',
+                },
+                json={
+                    "result_checksum": impact.json()["result_checksum"],
+                    "policy_version_id": str(POLICY_ID),
+                    "decision": "approve",
+                },
+            )
+            assert foreign_approval.status_code == 404
+
             approval = await client.post(
                 f"/v1/simulations/{simulation_id}/approvals",
                 headers={
@@ -217,6 +286,18 @@ async def test_multitenant_role_and_object_authorization_matrix() -> None:
             )
             assert gate.status_code == 201
             assert gate.json()["decision"] == "block"
+
+            foreign_gate = await client.post(
+                "/v1/release-gates/evaluate",
+                headers=_headers(tokens["foreign_approver"], idempotency=True),
+                json={
+                    "simulation_id": simulation_id,
+                    "approval_id": approval.json()["id"],
+                    "result_checksum": impact.json()["result_checksum"],
+                    "policy_version_id": str(POLICY_ID),
+                },
+            )
+            assert foreign_gate.status_code == 404
 
             evidence_export = await client.get(
                 f"/v1/simulations/{simulation_id}/evidence-export",

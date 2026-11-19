@@ -1,5 +1,11 @@
 # Progress and Status
 
+## Update — 2026-11-19, full current-surface isolation closeout
+
+Branch `codex/pilot-isolation-closeout` classifies every current HTTP, network, worker, metric, artifact, and operator surface. It adds an exact-route authentication invariant, expanded cross-tenant negatives through approval and release gating, aggregate metric redaction checks, and pilot gateway rejection for metrics, development endpoints, and framework introspection. Services and Prometheus remain internal with only the HTTPS gateway published.
+
+Local evidence passes: 91 clean-Linux non-integration tests at 81.13% coverage, the expanded database-backed integration matrix, exact-route and metric checks, successful Caddy 2.10.2 configuration adaptation, and diff hygiene. PILOT-02 remains open until final static checks and all five protected checks pass.
+
 ## Update — 2026-11-19, usability and accessibility evidence
 
 PR #32 passed all five protected checks and merged the performance mechanism as `67006a9`. Main run `44353040583` passed on a four-CPU GitHub runner with 30 acknowledgement samples at 8.199 ms P95 and three deterministic 10,000-event replays in 4.488–4.790 seconds. Its raw artifact is retained until 2027-02-16, so PILOT-09 is closed.
@@ -73,8 +79,9 @@ The approved implementation baseline is [`docs/pilot-readiness-plan.md`](pilot-r
 
 1. Complete Auth0-hosted login/logout, invited identity, invalid-token, and rotation evidence.
 2. Complete sustained saturation, timeout/recovery, and reference-profile evidence for PILOT-06.
-3. Deploy the reviewed immutable pilot topology and capture provider secret-store, HTTPS, log-redaction, scheduled-backup, restore, rollback, log, and alert-delivery evidence.
-4. Complete security, isolation, and signed operator acceptance. Supply-chain, performance, and usability technical evidence are complete.
+3. Merge the complete current-surface isolation matrix after protected evidence passes.
+4. Deploy the reviewed immutable pilot topology and capture provider secret-store, HTTPS, log-redaction, scheduled-backup, restore, rollback, log, and alert-delivery evidence.
+5. Complete remaining security and signed operator acceptance. Supply-chain, performance, and usability technical evidence are complete.
 5. Publish immutable `v0.4.0-pilot.1` artifacts only after every gate passes.
 
 ## Owner decisions required

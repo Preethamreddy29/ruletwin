@@ -22,7 +22,7 @@ The authoritative requirements remain in [`product/requirements.md`](product/req
 | Pilot supply chain | API/web SPDX SBOMs, Trivy JSON reports and fail-closed gates, immutable image metadata, `scripts/release_evidence.py`, and `operations/pilot-release-evidence.md` | Manifest unit/tamper tests; protected PR workflow artifact; main-only preflight workflow artifact | PILOT-08 closed through PR #31 and successful main run `44348823858` |
 | Pilot performance | `scripts/performance.py`, protected smoke profile, main-only reference workflow, and `operations/pilot-performance.md` | Raw acknowledgement samples and P95; repeated 10,000-event replay timing and checksum equality; named machine/commit/data profile | PILOT-09 closed through PR #32 and main run `44353040583` |
 | Pilot usability and accessibility | Opaque audit keyset pagination, retry/focus states, retained Playwright/axe workflow, and `operations/pilot-acceptance-checklist.md` | Allow/block browser flows; pagination; serious/critical axe scan; mobile keyboard check; signed operator rehearsal | Repository evidence passed through PR #33 and main run `44444505199`; named operator sign-off pending |
-| High threats and full-surface isolation | Phase 1 threat/control plans | Reproduction/artifact/webhook/metrics/operator negative matrix | Remaining controlled-pilot scope |
+| High threats and full-surface isolation | Exact current route/network/operator inventory; authenticated-route invariant; aggregate metric redaction; pilot edge/internal-network enforcement | Expanded create/read/approve/gate/audit cross-tenant negatives; route contract; metric and gateway tests | Local evidence passes on `codex/pilot-isolation-closeout`; protected evidence pending |
 
 
 ## Current gate

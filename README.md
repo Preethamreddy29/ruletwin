@@ -23,6 +23,7 @@ The portfolio index and governing sources are maintained in the sibling `enterpr
 - API/web SPDX SBOMs, high/critical vulnerability gates, checksum-bound evidence manifests, and retained preflight workflow artifacts.
 - Reproducible synthetic performance measurement with raw acknowledgement samples, named machine profiles, and deterministic 10,000-event replay evidence.
 - Opaque tenant-scoped audit pagination, focused failure/retry states, mobile keyboard access, and automated serious/critical accessibility checks.
+- An exact pilot surface inventory with authenticated-route enforcement, expanded cross-tenant negatives, aggregate-only internal metrics, and edge blocking for operator/development surfaces.
 - FastAPI, React/TypeScript, PostgreSQL, Docker Compose, OpenAPI, migrations, and protected CI validation.
 
 ## Current milestone
@@ -52,6 +53,7 @@ Start with:
 - [`docs/architecture/nfrs.md`](docs/architecture/nfrs.md)
 - [`docs/data/data-model.md`](docs/data/data-model.md)
 - [`docs/security/threat-model.md`](docs/security/threat-model.md)
+- [`docs/security/pilot-surface-isolation-matrix.md`](docs/security/pilot-surface-isolation-matrix.md)
 - [`packages/contracts/openapi.json`](packages/contracts/openapi.json)
 - [`docs/requirements-traceability.md`](docs/requirements-traceability.md)
 - [`docs/progress.md`](docs/progress.md)
@@ -77,6 +79,7 @@ Start with:
 - [`docs/validation/pilot-performance-validation.md`](docs/validation/pilot-performance-validation.md)
 - [`docs/operations/pilot-acceptance-checklist.md`](docs/operations/pilot-acceptance-checklist.md)
 - [`docs/validation/pilot-usability-validation.md`](docs/validation/pilot-usability-validation.md)
+- [`docs/validation/pilot-isolation-validation.md`](docs/validation/pilot-isolation-validation.md)
 
 ## Security and limitations
 

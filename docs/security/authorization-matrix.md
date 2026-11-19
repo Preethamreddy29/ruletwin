@@ -1,6 +1,6 @@
 # Authorization and Tenant-Isolation Matrix
 
-Every row is a server-side decision requiring same-tenant allow tests plus cross-tenant, wrong-role, absent-membership and stale-state denial tests. Phase 4A implements the existing rule creation, dataset/simulation creation, simulation/impact reads, review, gate, and audit-list rows. The first controlled-pilot increment adds the evidence-export row for completed simulations. Rows for rule diff, evidence reproduction, artifacts, operations and webhooks remain planned or disabled.
+Every row is a server-side decision requiring same-tenant allow tests plus cross-tenant, wrong-role, absent-membership and stale-state denial tests. The current pilot implements rule creation, dataset/simulation creation, simulation/impact reads, review, gate, audit pagination, and completed-simulation evidence export. Evidence reproduction, standalone artifacts, and webhooks remain disabled with no route. The exact current exposure is recorded in [`pilot-surface-isolation-matrix.md`](pilot-surface-isolation-matrix.md).
 
 | Resource/action | Analyst | QA reviewer | Release approver | Auditor | Operator | Object/state rule |
 |---|---:|---:|---:|---:|---:|---|

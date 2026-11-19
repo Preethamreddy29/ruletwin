@@ -21,4 +21,4 @@
 - Operators can diagnose execution state without reading rule/event/result payloads by default.
 - Authorization denial is stable and non-enumerating; cross-tenant objects are not distinguishable from absent objects.
 
-Phase 4A converts the implemented rounding workflow rows into executable same-tenant, wrong-role, absent-membership and cross-tenant tests. Export, artifact, webhook, metrics and operator-specific rows remain planned for later Phase 4/5 increments.
+The current pilot converts every exposed rounding-workflow row into executable same-tenant, wrong-role, absent-membership and cross-tenant tests. Completed-simulation export is parent-authorized. Metrics are aggregate-only and internal at the pilot gateway; standalone artifacts, webhooks, reproduction, and worker/operator APIs have no exposed route. See [`pilot-surface-isolation-matrix.md`](pilot-surface-isolation-matrix.md).
