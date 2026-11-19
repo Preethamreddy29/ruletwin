@@ -1,0 +1,58 @@
+name: Pilot usability evidence
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pilot-usability-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  rehearse:
+    name: Rehearse browser and accessibility flow
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    env:
+      POSTGRES_DB: ruletwin
+      POSTGRES_USER: ruletwin_admin
+      POSTGRES_PASSWORD: usability-admin-placeholder
+      POSTGRES_APP_PASSWORD: usability-app-placeholder
+      POSTGRES_TEST_PASSWORD: usability-test-placeholder
+      RULETWIN_JWT_SECRET: usability-jwt-placeholder-at-least-32-characters # gitleaks:allow
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.18.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22.20.0"
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @ruletwin/web exec playwright install --with-deps chromium
+      - run: docker compose --profile core up --build --detach
+      - name: Rehearse pilot and record accessibility evidence
+        run: |
+          mkdir -p artifacts/usability
+          pnpm --filter @ruletwin/web exec playwright test --reporter=json \
+            > artifacts/usability/playwright-report.json
+          printf '{"commit":"%s","run_id":"%s","runner_os":"%s","runner_arch":"%s"}\n' \
+            "$GITHUB_SHA" "$GITHUB_RUN_ID" "$RUNNER_OS" "$RUNNER_ARCH" \
+            > artifacts/usability/metadata.json
+      - name: Upload immutable usability evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ruletwin-usability-${{ github.sha }}
+          path: artifacts/usability
+          if-no-files-found: error
+          retention-days: 90
+      - name: Capture diagnostics
+        if: failure()
+        run: docker compose --profile core logs --tail 200 api worker postgres web
+      - name: Stop services
+        if: always()
+        run: docker compose --profile core down --volumes
