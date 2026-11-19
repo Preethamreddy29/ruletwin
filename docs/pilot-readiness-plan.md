@@ -1,6 +1,6 @@
 # Controlled Pilot Readiness Plan
 **Status:** Approved implementation baseline  
-**Baseline:** `main` at `67006a9`
+**Baseline:** `main` at `e43f5b5`
 **Pilot data:** Synthetic data only  
 **Deployment audience:** Invited users only until every exit criterion passes
 ## Objective
@@ -45,11 +45,11 @@ Deliver RuleTwin as a controlled, independently deployable pilot that demonstrat
 
 ## Current workstream status
 
-| Workstream | Status at `67006a9` plus the current development branch |
+| Workstream | Status at `e43f5b5` plus the current development branch |
 |---|---|
 | PILOT-01 Identity | OIDC verification and Auth0-compatible PKCE browser implementation merged; hosted Auth0 configuration and provider evidence pending |
-| PILOT-02 Tenant isolation | Exact route/network/operator matrix, expanded negatives, aggregate metric redaction, and pilot edge blocking are on `codex/pilot-isolation-closeout`; protected evidence pending |
-| PILOT-06 Resource safety | Foundation merged through PR #25; sustained saturation, timeout/recovery, and reference-profile evidence pending |
+| PILOT-02 Tenant isolation | Closed for the exact current surface through PR #35 at `e43f5b5`; all five protected checks passed in run `44447233869`; any new surface reopens the gate |
+| PILOT-06 Resource safety | Foundation merged through PR #25; local sustained saturation, timeout/recovery, and named-profile measurement pass on `codex/pilot-resource-safety-evidence`; protected and retained main evidence pending |
 | PILOT-07 Operations | Implementation merged through PR #28; hosted log/notification delivery and operator rehearsal pending |
 | PILOT-03 Deployment | HTTPS/internal-network Compose topology, digest enforcement, automated migration/seed ordering, and deployment-record tooling merged through PR #30; hosted deployment record pending |
 | PILOT-04 Secrets | File-mounted application/database secret support and external-secret configuration contract merged through PR #30; provider secret-store and hosted log-redaction evidence pending |
@@ -88,4 +88,4 @@ The pilot release is blocked unless:
 
 ## Current assessment
 
-Phase 4A, evidence export, OIDC/Auth0 integration, resource safety, operations, deployment/recovery, supply-chain preflight, performance, and usability technical evidence are merged with protected evidence through PR #33 at `52ee56f`. The controlled-pilot release gate is not yet satisfied: Auth0-hosted identity evidence, full-surface isolation, hosted deployment/secrets/recovery/operations evidence, remaining resource-safety evidence, and a signed operator rehearsal remain.
+Phase 4A, evidence export, OIDC/Auth0 integration, resource-safety controls, operations, deployment/recovery, supply-chain preflight, performance, usability technical evidence, and current-surface isolation are merged with protected evidence through PR #35 at `e43f5b5`. The controlled-pilot release gate is not yet satisfied: Auth0-hosted identity evidence, hosted deployment/secrets/recovery/operations evidence, protected and retained resource-safety evidence, and a signed operator rehearsal remain.

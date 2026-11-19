@@ -19,7 +19,7 @@ The sibling portfolio repository is development provenance, not a RuleTwin runti
 | 2 — Engineering foundation | Complete; merged at `ce437aae` with clean-runner evidence | Repeatable engineering base |
 | 3 — First vertical slice | Complete; merged in PR #13 | Core deterministic workflow is executable |
 | 4A — Multi-tenant authorization | Complete; merged in PR #18 at `cffdb30`; protected CI passed | Tenant boundary is executable for implemented surfaces |
-| Controlled-pilot readiness | In progress; supply-chain, performance, and usability/accessibility technical evidence are complete; signed operator and provider-hosted exit evidence are incomplete | Invitation-only synthetic-data pilot gate |
+| Controlled-pilot readiness | In progress; current-surface isolation, supply-chain, performance, and usability/accessibility technical evidence are complete; resource-safety retained evidence, signed operator, and provider-hosted exit evidence are incomplete | Invitation-only synthetic-data pilot gate |
 
 ## Delivered foundation
 
@@ -35,13 +35,13 @@ The controlling scope is [`pilot-readiness-plan.md`](pilot-readiness-plan.md). D
 
 1. Completed-simulation evidence export and authorization — merged through PR #21.
 2. Complete real-provider login/logout, invited-subject, invalid-token, and rotation evidence for the merged OIDC/Auth0 implementation.
-3. Request, dataset, execution, queue, retry, and concurrency limits — foundation merged through PR #25; sustained saturation, timeout/recovery, and reference-profile evidence remain before PILOT-06 closure.
+3. Request, dataset, execution, queue, retry, and concurrency limits — foundation merged through PR #25; local sustained saturation, timeout/recovery, and named-profile evidence pass on `codex/pilot-resource-safety-evidence`; protected/main artifacts remain before PILOT-06 closure.
 4. Structured operational telemetry, actionable alerts, and an incident runbook — merged through PR #28.
 5. Reproducible HTTPS deployment, external secret management, automated migrations, backups, restore, and rollback — implementation foundation merged through PR #30; hosted evidence remains required.
 6. Supply-chain artifacts — merged through PR #31 with successful protected and main preflight evidence.
 7. Reference-profile performance evidence — closed through PR #32 and main run `44353040583`.
 8. Accessibility technical evidence and operator acceptance — repository evidence complete through PR #33 and main run `44444505199`; signed rehearsal remains human-owned.
-9. Full current-surface tenant-isolation closeout — exact route/network/operator inventory and expanded negative evidence on `codex/pilot-isolation-closeout`.
+9. Full current-surface tenant-isolation closeout — closed through PR #35 at `e43f5b5`; any new surface reopens its inventory and negative-evidence gate.
 10. Immutable `v0.4.0-pilot.1` release only after every pilot gate passes.
 
 ## Non-negotiable constraints

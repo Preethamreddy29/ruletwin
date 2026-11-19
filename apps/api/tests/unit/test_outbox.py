@@ -2,7 +2,7 @@ import uuid
 from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock
 
-from ruletwin.worker.main import retry_delay_seconds
+from ruletwin.worker.main import exception_message, retry_delay_seconds
 from ruletwin.worker.outbox import CLAIM_SQL, claim_one
 
 
@@ -44,3 +44,8 @@ def test_retry_delay_is_exponential_and_capped() -> None:
     assert retry_delay_seconds(1, base_seconds=2, max_seconds=10) == 2
     assert retry_delay_seconds(3, base_seconds=2, max_seconds=10) == 8
     assert retry_delay_seconds(8, base_seconds=2, max_seconds=10) == 10
+
+
+def test_exception_message_falls_back_to_type_for_blank_timeout() -> None:
+    assert exception_message(TimeoutError()) == "TimeoutError"
+    assert exception_message(RuntimeError(" processing failed ")) == "processing failed"

@@ -1,10 +1,14 @@
 # Progress and Status
 
+## Update — 2026-11-19, resource-safety evidence in progress
+
+Branch `codex/pilot-resource-safety-evidence` adds a repeatable container-level evidence runner and a retained main-only workflow. The named local `sunny-windows-docker-resource-v1` run admitted 5 simulations at the configured limit, rejected the next request with `queue-capacity-exceeded`, preserved the original identifier for an idempotent retry, and drained all accepted work in 6.614 seconds with one deterministic checksum. A forced one-second worker timeout was recorded as `TimeoutError`; the same outbox item recovered and completed on attempt 2. API and worker container measurements were captured with the commit and profile. PILOT-06 remains open until protected CI and the retained main-only workflow pass.
+
 ## Update — 2026-11-19, full current-surface isolation closeout
 
 Branch `codex/pilot-isolation-closeout` classifies every current HTTP, network, worker, metric, artifact, and operator surface. It adds an exact-route authentication invariant, expanded cross-tenant negatives through approval and release gating, aggregate metric redaction checks, and pilot gateway rejection for metrics, development endpoints, and framework introspection. Services and Prometheus remain internal with only the HTTPS gateway published.
 
-Local evidence passes: 91 clean-Linux non-integration tests at 81.13% coverage, the expanded database-backed integration matrix, exact-route and metric checks, successful Caddy 2.10.2 configuration adaptation, and diff hygiene. PILOT-02 remains open until final static checks and all five protected checks pass.
+Local evidence passes: 91 clean-Linux non-integration tests at 81.13% coverage, the expanded database-backed integration matrix, exact-route and metric checks, successful Caddy 2.10.2 configuration adaptation, and diff hygiene. All five protected checks passed in run `44447233869`; PR #35 was squash-merged as `e43f5b5`. PILOT-02 is closed for the exact current surface; any new surface reopens the gate.
 
 ## Update — 2026-11-19, usability and accessibility evidence
 
@@ -44,11 +48,11 @@ PILOT-01 also remains open: the Auth0 tenant/application/API and namespaced tena
 
 **As of:** 2026-11-19
 
-**Baseline:** `main` at `52ee56f`; usability technical evidence merged through PR #33
+**Baseline:** `main` at `e43f5b5`; current-surface isolation merged through PR #35
 
 **Milestone:** Controlled-pilot readiness implementation
 
-**Overall:** Tenant authorization, evidence export, OIDC/Auth0 integration, resource safety, operations, deployment/recovery, supply-chain preflight, performance, and usability/accessibility technical evidence are merged with successful protected evidence. RuleTwin is suitable for a synthetic local demonstration. It is not approved for an externally hosted pilot or real data.
+**Overall:** Tenant authorization, evidence export, OIDC/Auth0 integration, resource-safety controls, operations, deployment/recovery, supply-chain preflight, performance, usability/accessibility technical evidence, and current-surface isolation are merged with successful protected evidence. RuleTwin is suitable for a synthetic local demonstration. It is not approved for an externally hosted pilot or real data.
 
 ## Completed evidence
 
@@ -71,17 +75,16 @@ PILOT-01 also remains open: the Auth0 tenant/application/API and namespaced tena
 - Auth0-hosted configuration, invited-user provisioning, login/logout, invalid-token, and key-rotation evidence require owner/provider access and are not complete.
 - Isolation evidence covers implemented API/UI paths, including completed-simulation JSON export, only; every future reproduction, artifact, webhook, metrics, and operator path must be protected or disabled.
 - Only the deterministic rounding-rule family and synthetic data packs are supported.
-- Hosted deployment, secret management, recovery, rollback, centralized log/notification delivery, complete resource-safety evidence, and signed usability acceptance do not yet have pilot exit evidence. Supply-chain preflight and performance evidence are complete.
+- Hosted deployment, secret management, recovery, rollback, centralized log/notification delivery, retained protected/main resource-safety evidence, and signed usability acceptance do not yet have pilot exit evidence. Current-surface isolation, supply-chain preflight, and performance evidence are complete.
 
 ## Next milestone
 
 The approved implementation baseline is [`docs/pilot-readiness-plan.md`](pilot-readiness-plan.md). Work is ordered as:
 
 1. Complete Auth0-hosted login/logout, invited identity, invalid-token, and rotation evidence.
-2. Complete sustained saturation, timeout/recovery, and reference-profile evidence for PILOT-06.
-3. Merge the complete current-surface isolation matrix after protected evidence passes.
-4. Deploy the reviewed immutable pilot topology and capture provider secret-store, HTTPS, log-redaction, scheduled-backup, restore, rollback, log, and alert-delivery evidence.
-5. Complete remaining security and signed operator acceptance. Supply-chain, performance, and usability technical evidence are complete.
+2. Complete protected and retained main-workflow evidence for PILOT-06; local saturation and timeout/recovery evidence already passes.
+3. Deploy the reviewed immutable pilot topology and capture provider secret-store, HTTPS, log-redaction, scheduled-backup, restore, rollback, log, and alert-delivery evidence.
+4. Complete remaining security and signed operator acceptance. Current-surface isolation, supply-chain, performance, and usability technical evidence are complete.
 5. Publish immutable `v0.4.0-pilot.1` artifacts only after every gate passes.
 
 ## Owner decisions required
