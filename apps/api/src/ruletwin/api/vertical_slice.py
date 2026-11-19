@@ -1,8 +1,11 @@
+import base64
+import binascii
+import json
 import uuid
-from datetime import date
+from datetime import date, datetime
 from typing import Annotated, Any, Literal
 
-from fastapi import APIRouter, Depends, Header, Request, Response, status
+from fastapi import APIRouter, Depends, Header, Query, Request, Response, status
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import text
 
@@ -101,6 +104,35 @@ def _settings(request: Request) -> Settings:
 
 def _correlation(request: Request) -> uuid.UUID:
     return uuid.UUID(request.state.request_id)
+
+
+def _encode_audit_cursor(created_at: datetime, event_id: uuid.UUID) -> str:
+    payload = json.dumps([created_at.isoformat(), str(event_id)], separators=(",", ":"))
+    return base64.urlsafe_b64encode(payload.encode("utf-8")).decode("ascii").rstrip("=")
+
+
+def _decode_audit_cursor(cursor: str) -> tuple[datetime, uuid.UUID]:
+    try:
+        padding = "=" * (-len(cursor) % 4)
+        decoded = base64.urlsafe_b64decode(cursor + padding).decode("utf-8")
+        value = json.loads(decoded)
+        if not isinstance(value, list) or len(value) != 2:
+            raise ValueError("cursor shape")
+        created_at = datetime.fromisoformat(value[0])
+        event_id = uuid.UUID(value[1])
+        if created_at.tzinfo is None:
+            raise ValueError("cursor timezone")
+        return created_at, event_id
+    except (
+        ValueError,
+        TypeError,
+        UnicodeDecodeError,
+        json.JSONDecodeError,
+        binascii.Error,
+    ) as error:
+        raise ProblemError(
+            422, "Validation failed", "cursor is invalid.", "validation-failed"
+        ) from error
 
 
 def _development_only(request: Request) -> Settings:
@@ -378,24 +410,39 @@ async def post_gate(
 
 @router.get("/audit-events")
 async def read_audit_events(
-    request: Request, identity: AuditReader, limit: int = 50
+    request: Request,
+    identity: AuditReader,
+    limit: int = Query(default=50, ge=1, le=200),
+    cursor: str | None = Query(default=None, max_length=512),
 ) -> dict[str, object]:
-    if not 1 <= limit <= 200:
-        raise ProblemError(
-            422, "Validation failed", "limit must be from 1 through 200.", "validation-failed"
-        )
+    boundary = _decode_audit_cursor(cursor) if cursor else None
     async with _database(request).session() as session:
-        rows = (
-            (
-                await session.execute(
-                    text("""
-                        SELECT * FROM audit_events WHERE tenant_id=:tenant_id
-                        ORDER BY created_at DESC, id DESC LIMIT :limit
-                    """),
-                    {"tenant_id": identity.tenant_id, "limit": limit},
-                )
+        statement = (
+            text(
+                """
+                SELECT * FROM audit_events
+                WHERE tenant_id=:tenant_id
+                  AND (created_at, id) < (:cursor_created_at, :cursor_id)
+                ORDER BY created_at DESC, id DESC LIMIT :page_size
+                """
             )
-            .mappings()
-            .all()
+            if boundary
+            else text(
+                """
+                SELECT * FROM audit_events WHERE tenant_id=:tenant_id
+                ORDER BY created_at DESC, id DESC LIMIT :page_size
+                """
+            )
         )
-    return {"items": [dict(row) for row in rows], "next_cursor": None}
+        parameters: dict[str, object] = {
+            "tenant_id": identity.tenant_id,
+            "page_size": limit + 1,
+        }
+        if boundary:
+            parameters["cursor_created_at"], parameters["cursor_id"] = boundary
+        rows = (await session.execute(statement, parameters)).mappings().all()
+    page = rows[:limit]
+    next_cursor = (
+        _encode_audit_cursor(page[-1]["created_at"], page[-1]["id"]) if len(rows) > limit else None
+    )
+    return {"items": [dict(row) for row in page], "next_cursor": next_cursor}

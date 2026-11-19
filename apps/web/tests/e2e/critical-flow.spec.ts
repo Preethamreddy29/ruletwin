@@ -47,6 +47,7 @@ for (const scenario of [
 
     await page.getByLabel("Active synthetic persona").selectOption("novabill-auditor");
     await page.getByRole("button", { name: "Inspect tenant audit trail" }).click();
-    await expect(page.getByText(/Authorized audit events:/)).toBeVisible();
+    await expect(page.getByText(/Authorized audit events loaded:/)).toBeVisible();
+    await expect(page.getByRole("list", { name: "Tenant audit events" })).toBeVisible();
   });
 }

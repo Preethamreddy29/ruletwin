@@ -164,7 +164,20 @@ function installFetch() {
           evidence_checksum: "sha256:gate",
           reasons: ["Policy blocked the evidence."],
         });
-      if (path.endsWith("/audit-events")) return response({ items: [{ id: "event" }] });
+      if (path.includes("/audit-events")) {
+        const nextPage = path.includes("cursor=");
+        return response({
+          items: [
+            {
+              id: nextPage ? "event-2" : "event-1",
+              action: nextPage ? "evidence.exported" : "simulation.completed",
+              object_type: "simulation",
+              created_at: "2026-11-19T00:00:00Z",
+            },
+          ],
+          next_cursor: nextPage ? null : "next-page",
+        });
+      }
       return response({ detail: "Unexpected request" }, false, 500);
     }),
   );
@@ -222,7 +235,14 @@ describe("App", () => {
       target: { value: "novabill-auditor" },
     });
     fireEvent.click(await screen.findByRole("button", { name: "Inspect tenant audit trail" }));
-    await waitFor(() => expect(screen.getByText("Authorized audit events: 1")).toBeInTheDocument());
+    await waitFor(() =>
+      expect(screen.getByText("Authorized audit events loaded: 1")).toBeInTheDocument(),
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Load next audit page" }));
+    await waitFor(() =>
+      expect(screen.getByText("Authorized audit events loaded: 2")).toBeInTheDocument(),
+    );
+    expect(screen.queryByRole("button", { name: "Load next audit page" })).not.toBeInTheDocument();
   });
 
   it("shows unavailable when service loading fails", async () => {

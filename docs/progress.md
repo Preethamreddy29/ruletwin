@@ -1,10 +1,16 @@
 # Progress and Status
 
+## Update — 2026-11-19, usability and accessibility evidence
+
+PR #32 passed all five protected checks and merged the performance mechanism as `67006a9`. Main run `44353040583` passed on a four-CPU GitHub runner with 30 acknowledgement samples at 8.199 ms P95 and three deterministic 10,000-event replays in 4.488–4.790 seconds. Its raw artifact is retained until 2027-02-16, so PILOT-09 is closed.
+
+Branch `codex/pilot-usability-acceptance` adds opaque tenant-scoped audit keyset pagination, visible multi-page audit evidence, focused failure and result states, explicit retry actions, visible keyboard focus, mobile identity access, automated axe checks, and a retained main-only browser evidence workflow. Local Chromium validation passes both allow/block workflows, the serious/critical accessibility scan, and the 390-by-844 keyboard/mobile check. PILOT-10 still requires protected/main artifacts and a signed operator rehearsal; no signature or observation has been invented.
+
 ## Update — 2026-11-18, performance evidence foundation
 
 PR #31 merged the PILOT-08 mechanism as `d9b1fa9`. All five protected checks passed, main preflight run `44348823858` succeeded, and its 539,754-byte immutable evidence artifact is retained until 2027-02-16. PILOT-08 is closed.
 
-Branch `codex/pilot-performance-evidence` adds raw API-acknowledgement measurement, repeated deterministic replay timing, exact commit/machine/data binding, a protected smoke profile, and a main-only 90-day reference workflow. The named local `sunny-windows-docker-reference-v1` run recorded 30 acknowledgement samples at 87.457 ms P95 against the 750 ms target. Three 10,000-event replays completed in 8.409–8.894 seconds with identical checksums. PILOT-09 remains open until protected pull-request and main reference artifacts pass.
+Branch `codex/pilot-performance-evidence` added raw API-acknowledgement measurement, repeated deterministic replay timing, exact commit/machine/data binding, a protected smoke profile, and a main-only 90-day reference workflow. The named local `sunny-windows-docker-reference-v1` run recorded 30 acknowledgement samples at 87.457 ms P95 against the 750 ms target. Three 10,000-event replays completed in 8.409–8.894 seconds with identical checksums. The later 2026-11-19 update records the successful protected/main evidence and formal PILOT-09 closure.
 
 ## Update — 2026-11-10, supply-chain preflight foundation
 
@@ -30,13 +36,13 @@ The resource-safety foundation adds request-body, replay-dataset, per-tenant que
 
 PILOT-01 also remains open: the Auth0 tenant/application/API and namespaced tenant claim require owner configuration, distinct invited subjects must be provisioned, and deployed login/logout, invalid-token, and provider key-rotation evidence must pass.
 
-**As of:** 2026-11-18
+**As of:** 2026-11-19
 
-**Baseline:** `main` at `d9b1fa9`; performance work on `codex/pilot-performance-evidence`
+**Baseline:** `main` at `67006a9`; usability work on `codex/pilot-usability-acceptance`
 
 **Milestone:** Controlled-pilot readiness implementation
 
-**Overall:** Tenant authorization, evidence export, OIDC/Auth0 integration, resource safety, operations, deployment/recovery, and supply-chain preflight are merged with successful protected evidence. Performance measurement has a named local baseline on the current branch but still needs protected artifacts. RuleTwin is suitable for a synthetic local demonstration. It is not approved for an externally hosted pilot or real data.
+**Overall:** Tenant authorization, evidence export, OIDC/Auth0 integration, resource safety, operations, deployment/recovery, supply-chain preflight, and performance evidence are merged with successful protected evidence. Usability/accessibility technical evidence is under development. RuleTwin is suitable for a synthetic local demonstration. It is not approved for an externally hosted pilot or real data.
 
 ## Completed evidence
 
@@ -59,7 +65,7 @@ PILOT-01 also remains open: the Auth0 tenant/application/API and namespaced tena
 - Auth0-hosted configuration, invited-user provisioning, login/logout, invalid-token, and key-rotation evidence require owner/provider access and are not complete.
 - Isolation evidence covers implemented API/UI paths, including completed-simulation JSON export, only; every future reproduction, artifact, webhook, metrics, and operator path must be protected or disabled.
 - Only the deterministic rounding-rule family and synthetic data packs are supported.
-- Hosted deployment, secret management, recovery, rollback, centralized log/notification delivery, complete resource-safety evidence, protected performance evidence, and usability acceptance do not yet have pilot exit evidence. Supply-chain preflight evidence is complete.
+- Hosted deployment, secret management, recovery, rollback, centralized log/notification delivery, complete resource-safety evidence, and signed usability acceptance do not yet have pilot exit evidence. Supply-chain preflight and performance evidence are complete.
 
 ## Next milestone
 
@@ -68,7 +74,7 @@ The approved implementation baseline is [`docs/pilot-readiness-plan.md`](pilot-r
 1. Complete Auth0-hosted login/logout, invited identity, invalid-token, and rotation evidence.
 2. Complete sustained saturation, timeout/recovery, and reference-profile evidence for PILOT-06.
 3. Deploy the reviewed immutable pilot topology and capture provider secret-store, HTTPS, log-redaction, scheduled-backup, restore, rollback, log, and alert-delivery evidence.
-4. Complete supply-chain, security, isolation, performance, accessibility, and operator acceptance.
+4. Complete security, isolation, accessibility technical evidence, and signed operator acceptance. Supply-chain and performance gates are closed.
 5. Publish immutable `v0.4.0-pilot.1` artifacts only after every gate passes.
 
 ## Owner decisions required

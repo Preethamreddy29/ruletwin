@@ -31,6 +31,13 @@ button:disabled {
   cursor: not-allowed;
   opacity: 0.45;
 }
+button:focus-visible,
+select:focus-visible,
+a:focus-visible,
+[tabindex="-1"]:focus-visible {
+  outline: 3px solid #f4cf75;
+  outline-offset: 3px;
+}
 button.secondary {
   border: 1px solid #3a4542;
   color: #d8e0de;
@@ -205,6 +212,7 @@ h1 {
 .isolation-card h2,
 .isolation-card p {
   margin: 0.25rem 0;
+  color: #17201e;
 }
 
 .proof {
@@ -398,8 +406,38 @@ select {
   font-family: ui-monospace, monospace;
   font-size: 11px;
 }
+.audit-page ol {
+  max-height: 240px;
+  margin: 12px 0;
+  padding: 0;
+  overflow: auto;
+  list-style: none;
+}
+.audit-page li {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 4px 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid #2a3935;
+  font-size: 12px;
+}
+.audit-page li time {
+  grid-column: 1 / -1;
+  color: #96a5a1;
+}
 .error {
-  color: #ff918a !important;
+  position: sticky;
+  bottom: 16px;
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+  margin-top: 18px;
+  padding: 16px;
+  border: 1px solid #ff918a;
+  border-radius: 12px;
+  color: #ffe4e1;
+  background: #3a1716;
 }
 @media (max-width: 1040px) {
   .workflow {
@@ -419,9 +457,6 @@ select {
   }
   h1 {
     font-size: 44px;
-  }
-  .identity {
-    display: none;
   }
   .metrics {
     grid-template-columns: 1fr;

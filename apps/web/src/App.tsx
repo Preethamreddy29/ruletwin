@@ -64,6 +64,18 @@ interface EvidenceExport {
   evidence: { schema_version: string; tenant_id: string; simulation: { id: string } };
 }
 
+interface AuditEvent {
+  id: string;
+  action: string;
+  object_type: string;
+  created_at: string;
+}
+
+interface AuditPage {
+  items: AuditEvent[];
+  next_cursor: string | null;
+}
+
 async function api<T>(
   path: string,
   token?: string | null,
@@ -101,10 +113,14 @@ export function App() {
   const [approvalId, setApprovalId] = useState<string | null>(null);
   const [gate, setGate] = useState<Gate | null>(null);
   const [isolationProof, setIsolationProof] = useState<string | null>(null);
-  const [auditCount, setAuditCount] = useState<number | null>(null);
+  const [auditEvents, setAuditEvents] = useState<AuditEvent[]>([]);
+  const [auditCursor, setAuditCursor] = useState<string | null>(null);
+  const [auditLoading, setAuditLoading] = useState(false);
   const [exportProof, setExportProof] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const pollTimer = useRef<number | null>(null);
+  const errorRef = useRef<HTMLDivElement | null>(null);
+  const resultsRef = useRef<HTMLElement | null>(null);
   const oidcManager = useRef<ReturnType<typeof createOidcManager>>(null);
 
   const scenario = scenarios.find((item) => item.tenant_id === session?.tenant.id) ?? null;
@@ -114,7 +130,8 @@ export function App() {
   const signIn = async (key: string) => {
     setError(null);
     setIsolationProof(null);
-    setAuditCount(null);
+    setAuditEvents([]);
+    setAuditCursor(null);
     setExportProof(null);
     const issued = (
       await api<{ access_token: string }>("/v1/dev/token", null, {
@@ -199,6 +216,14 @@ export function App() {
     [],
   );
 
+  useEffect(() => {
+    if (error) errorRef.current?.focus();
+  }, [error]);
+
+  useEffect(() => {
+    if (workflow === "completed" || workflow === "failed") resultsRef.current?.focus();
+  }, [workflow]);
+
   const poll = async (id: string, accessToken: string) => {
     try {
       const current = (await api<Simulation>(`/v1/simulations/${id}`, accessToken)).body;
@@ -219,8 +244,8 @@ export function App() {
     }
   };
 
-  const startSimulation = async (event: FormEvent) => {
-    event.preventDefault();
+  const startSimulation = async (event?: FormEvent) => {
+    event?.preventDefault();
     if (!scenario || !token || role !== "author") return;
     setWorkflow("creating");
     setError(null);
@@ -346,13 +371,20 @@ export function App() {
     }
   };
 
-  const inspectAudit = async () => {
+  const inspectAudit = async (cursor?: string) => {
     if (!token || role !== "auditor") return;
+    setAuditLoading(true);
+    setError(null);
     try {
-      const result = (await api<{ items: object[] }>("/v1/audit-events", token)).body;
-      setAuditCount(result.items.length);
+      const query = new URLSearchParams({ limit: "10" });
+      if (cursor) query.set("cursor", cursor);
+      const result = (await api<AuditPage>(`/v1/audit-events?${query}`, token)).body;
+      setAuditEvents((current) => (cursor ? [...current, ...result.items] : result.items));
+      setAuditCursor(result.next_cursor);
     } catch (reason) {
       setError((reason as Error).message);
+    } finally {
+      setAuditLoading(false);
     }
   };
 
@@ -385,7 +417,7 @@ export function App() {
   return (
     <main>
       <header className="topbar">
-        <a className="brand" href="/" aria-label="RuleTwin home">
+        <a className="brand" href="/">
           <span className="brand-mark">RT</span>
           <span>RuleTwin</span>
         </a>
@@ -523,7 +555,7 @@ export function App() {
             )}
           </form>
 
-          <section className="panel results" aria-live="polite">
+          <section className="panel results" aria-live="polite" ref={resultsRef} tabIndex={-1}>
             <div className="step">
               <span>02</span> Inspect
             </div>
@@ -613,18 +645,59 @@ export function App() {
               </p>
             )}
             {role === "auditor" && (
-              <button type="button" className="secondary" onClick={() => void inspectAudit()}>
-                Inspect tenant audit trail
+              <button
+                type="button"
+                className="secondary"
+                onClick={() => void inspectAudit()}
+                disabled={auditLoading}
+              >
+                {auditLoading && auditEvents.length === 0
+                  ? "Loading audit trail…"
+                  : "Inspect tenant audit trail"}
               </button>
             )}
-            {auditCount !== null && <p className="proof">Authorized audit events: {auditCount}</p>}
+            {auditEvents.length > 0 && (
+              <div className="audit-page" aria-live="polite">
+                <p className="proof">Authorized audit events loaded: {auditEvents.length}</p>
+                <ol aria-label="Tenant audit events">
+                  {auditEvents.map((event) => (
+                    <li key={event.id}>
+                      <strong>{event.action}</strong>
+                      <span>{event.object_type}</span>
+                      <time dateTime={event.created_at}>
+                        {new Date(event.created_at).toLocaleString()}
+                      </time>
+                    </li>
+                  ))}
+                </ol>
+                {auditCursor && (
+                  <button
+                    type="button"
+                    className="secondary"
+                    onClick={() => void inspectAudit(auditCursor)}
+                    disabled={auditLoading}
+                  >
+                    {auditLoading ? "Loading next page…" : "Load next audit page"}
+                  </button>
+                )}
+              </div>
+            )}
           </section>
         </section>
       )}
 
       {error && (
-        <div className="error" role="alert">
-          {error}
+        <div className="error" role="alert" ref={errorRef} tabIndex={-1}>
+          <span>{error}</span>
+          {workflow === "failed" && role === "author" && scenario ? (
+            <button type="button" onClick={() => void startSimulation()}>
+              Retry comparison
+            </button>
+          ) : service === "unavailable" ? (
+            <button type="button" onClick={() => window.location.reload()}>
+              Retry connection
+            </button>
+          ) : null}
         </div>
       )}
     </main>

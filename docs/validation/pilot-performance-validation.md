@@ -2,7 +2,7 @@
 
 **Date:** 2026-11-18
 
-**Scope:** Repository mechanism and local reference evidence for PILOT-09
+**Scope:** Closed repository and reference evidence for PILOT-09
 
 **Branch:** `codex/pilot-performance-evidence`
 
@@ -29,6 +29,13 @@
 | Replay durations | 8.894 s, 8.409 s, and 8.695 s |
 | Replay determinism | Passed; all result checksums identical |
 
+## Protected and main evidence
+
+- PR #32 passed all five protected checks and merged as `67006a9e269bdc8f918759c836645b80eb0ac47e`.
+- Main workflow run `44353040583` passed on the merged commit.
+- Artifact `ruletwin-performance-67006a9e269bdc8f918759c836645b80eb0ac47e` is retained until 2027-02-16.
+- The GitHub runner reported 4 CPUs, 30 acknowledgement samples at 8.199 ms P95, and three deterministic 10,000-event replays in 4.488–4.790 seconds.
+
 ## Exit assessment
 
-The repository mechanism and named local baseline pass. PILOT-09 closes only after the branch's protected workflow and the merged `main` performance-evidence workflow pass with retained artifacts. The measurements do not establish a production SLA, hosted capacity, three-tenant concurrency, or the Phase 1 100,000-event scale hypothesis.
+PILOT-09 is closed. The named local result and independent protected/main clean-runner results pass with retained raw evidence. These measurements do not establish a production SLA, hosted capacity, three-tenant concurrency, or the Phase 1 100,000-event scale hypothesis.

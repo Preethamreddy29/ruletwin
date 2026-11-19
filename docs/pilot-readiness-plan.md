@@ -1,6 +1,6 @@
 # Controlled Pilot Readiness Plan
 **Status:** Approved implementation baseline  
-**Baseline:** `main` at `d9b1fa9`
+**Baseline:** `main` at `67006a9`
 **Pilot data:** Synthetic data only  
 **Deployment audience:** Invited users only until every exit criterion passes
 ## Objective
@@ -45,7 +45,7 @@ Deliver RuleTwin as a controlled, independently deployable pilot that demonstrat
 
 ## Current workstream status
 
-| Workstream | Status at `d9b1fa9` plus the current development branch |
+| Workstream | Status at `67006a9` plus the current development branch |
 |---|---|
 | PILOT-01 Identity | OIDC verification and Auth0-compatible PKCE browser implementation merged; hosted Auth0 configuration and provider evidence pending |
 | PILOT-02 Tenant isolation | Implemented paths covered; complete exposed-surface matrix pending |
@@ -55,8 +55,8 @@ Deliver RuleTwin as a controlled, independently deployable pilot that demonstrat
 | PILOT-04 Secrets | File-mounted application/database secret support and external-secret configuration contract merged through PR #30; provider secret-store and hosted log-redaction evidence pending |
 | PILOT-05 Recovery | Checksum-bound backup and isolated fingerprinted restore/worker-restart tooling merged through PR #30; hosted rehearsal plus approved RPO/RTO pending |
 | PILOT-08 Supply chain | Closed: PR #31 and main preflight run `44348823858` passed; artifact `ruletwin-0.4.0-pilot.preflight.1-d9b1fa9...` is retained for 90 days |
-| PILOT-09 Performance | Named local baseline passes at `d9b1fa9`; protected pull-request and main reference artifacts pending |
-| PILOT-10 Usability | Remaining controlled-pilot work |
+| PILOT-09 Performance | Closed: PR #32 and main run `44353040583` passed; local and GitHub reference artifacts retain raw samples and deterministic replay results |
+| PILOT-10 Usability | Opaque audit pagination, failure/retry focus, accessibility and mobile browser checks are on `codex/pilot-usability-acceptance`; protected/main artifacts and signed operator rehearsal pending |
 
 ## Release gate
 
@@ -88,4 +88,4 @@ The pilot release is blocked unless:
 
 ## Current assessment
 
-Phase 4A, evidence export, OIDC/Auth0 integration, resource safety, operations, deployment/recovery, and supply-chain preflight are merged with protected evidence through PR #31 at `d9b1fa9`. The current branch adds reproducible performance measurement and a named local baseline. The controlled-pilot release gate is not yet satisfied: Auth0-hosted identity evidence, full-surface isolation, hosted deployment/secrets/recovery/operations evidence, remaining resource-safety evidence, protected performance evidence, and usability acceptance remain.
+Phase 4A, evidence export, OIDC/Auth0 integration, resource safety, operations, deployment/recovery, supply-chain preflight, and performance evidence are merged with protected evidence through PR #32 at `67006a9`. The current branch adds the PILOT-10 technical usability and accessibility controls. The controlled-pilot release gate is not yet satisfied: Auth0-hosted identity evidence, full-surface isolation, hosted deployment/secrets/recovery/operations evidence, remaining resource-safety evidence, protected usability evidence, and a signed operator rehearsal remain.

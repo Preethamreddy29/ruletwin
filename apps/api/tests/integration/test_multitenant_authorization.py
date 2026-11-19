@@ -256,6 +256,28 @@ async def test_multitenant_role_and_object_authorization_matrix() -> None:
             assert all(
                 item["tenant_id"] == str(SECOND_TENANT_ID) for item in foreign_audit.json()["items"]
             )
+
+            first_page = await client.get(
+                "/v1/audit-events?limit=2", headers=_headers(tokens["auditor"])
+            )
+            assert first_page.status_code == 200
+            assert len(first_page.json()["items"]) == 2
+            assert first_page.json()["next_cursor"]
+            second_page = await client.get(
+                "/v1/audit-events",
+                params={"limit": 2, "cursor": first_page.json()["next_cursor"]},
+                headers=_headers(tokens["auditor"]),
+            )
+            assert second_page.status_code == 200
+            first_ids = {item["id"] for item in first_page.json()["items"]}
+            second_ids = {item["id"] for item in second_page.json()["items"]}
+            assert first_ids.isdisjoint(second_ids)
+            assert all(item["tenant_id"] == str(TENANT_ID) for item in second_page.json()["items"])
+
+            invalid_cursor = await client.get(
+                "/v1/audit-events?cursor=not-a-cursor", headers=_headers(tokens["auditor"])
+            )
+            assert invalid_cursor.status_code == 422
     finally:
         await database.dispose()
         await app.state.database.dispose()
