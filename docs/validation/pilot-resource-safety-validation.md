@@ -53,4 +53,4 @@ The merged foundation plus the `codex/pilot-resource-safety-evidence` increment 
 
 ## Exit assessment
 
-Local saturation, timeout/recovery, and measured-container evidence passes. PILOT-06 closes only after the five protected pull-request checks pass and the main-only resource-safety workflow retains its artifact. General edge request-rate limiting is an operational defense in depth and is not represented as a replacement for the queue and execution limits proven here.
+PR #36 passed all five protected checks in run `44546320237` and was squash-merged as `db4e3dd`. Main-only run `44547402942` passed on the merged commit and retained artifact `14540613851`, named `ruletwin-resource-safety-db4e3dd210e6402579782b67bfa567c1531f8c97`, until 2027-02-17. PILOT-06 is closed. General edge request-rate limiting remains an operational defense in depth and is not represented as a replacement for the queue and execution limits proven here.
