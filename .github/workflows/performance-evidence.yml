@@ -30,7 +30,7 @@ jobs:
       RULETWIN_JWT_SECRET: performance-jwt-placeholder-at-least-32-characters # gitleaks:allow
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
       - name: Start exact merged core profile
