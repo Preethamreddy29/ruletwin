@@ -28,7 +28,7 @@ The portfolio index and governing sources are maintained in the sibling `enterpr
 
 ## Current milestone
 
-The next milestone is controlled-pilot readiness. Its scope, exclusions, required evidence, and user decisions are defined in [`docs/pilot-readiness-plan.md`](docs/pilot-readiness-plan.md). Current-surface isolation, supply-chain, and performance repository gates are closed. Actual Auth0 tenant configuration and invited-user evidence, hosted deployment/log/notification evidence, provider secret-store evidence, hosted recovery drills, retained resource-safety workflow evidence, and signed operator acceptance remain required before an externally hosted pilot.
+The next milestone is controlled-pilot readiness. Its scope, exclusions, required evidence, and user decisions are defined in [`docs/pilot-readiness-plan.md`](docs/pilot-readiness-plan.md). Current-surface isolation, resource safety, supply chain, and performance repository gates are closed. Actual Auth0 tenant configuration and invited-user evidence, hosted deployment/log/notification evidence, provider secret-store evidence, hosted recovery drills, and signed operator acceptance remain required before an externally hosted pilot.
 
 ## Run locally
 
