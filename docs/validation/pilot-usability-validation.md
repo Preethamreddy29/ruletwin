@@ -2,7 +2,7 @@
 
 **Date:** 2026-11-19
 
-**Scope:** Repository implementation and local technical evidence for PILOT-10
+**Scope:** Completed repository technical evidence for PILOT-10
 
 **Branch:** `codex/pilot-usability-acceptance`
 
@@ -32,4 +32,6 @@
 
 ## Exit assessment
 
-The local browser evidence passes. PILOT-10 does not close until protected pull-request checks and the merged `main` usability workflow pass with retained artifacts, and a named operator performs and signs the acceptance checklist. Automation may close the technical evidence portion only; it cannot manufacture the human observation.
+PR #33 passed all five protected checks in run `44443944501` and squash-merged as `52ee56f6a5d797d8d6042aecaa9bdefebd524499`. Main workflow run `44444505199` passed and retained artifact `14493046072`, named `ruletwin-usability-52ee56f6a5d797d8d6042aecaa9bdefebd524499`, until 2027-02-17.
+
+The PILOT-10 repository technical evidence is complete. PILOT-10 as a whole remains open until a named operator performs and signs the acceptance checklist. Automation cannot manufacture that human observation.

@@ -56,7 +56,7 @@ Deliver RuleTwin as a controlled, independently deployable pilot that demonstrat
 | PILOT-05 Recovery | Checksum-bound backup and isolated fingerprinted restore/worker-restart tooling merged through PR #30; hosted rehearsal plus approved RPO/RTO pending |
 | PILOT-08 Supply chain | Closed: PR #31 and main preflight run `44348823858` passed; artifact `ruletwin-0.4.0-pilot.preflight.1-d9b1fa9...` is retained for 90 days |
 | PILOT-09 Performance | Closed: PR #32 and main run `44353040583` passed; local and GitHub reference artifacts retain raw samples and deterministic replay results |
-| PILOT-10 Usability | Opaque audit pagination, failure/retry focus, accessibility and mobile browser checks are on `codex/pilot-usability-acceptance`; protected/main artifacts and signed operator rehearsal pending |
+| PILOT-10 Usability | Repository technical evidence complete through PR #33 and main run `44444505199`; signed operator rehearsal pending |
 
 ## Release gate
 
@@ -88,4 +88,4 @@ The pilot release is blocked unless:
 
 ## Current assessment
 
-Phase 4A, evidence export, OIDC/Auth0 integration, resource safety, operations, deployment/recovery, supply-chain preflight, and performance evidence are merged with protected evidence through PR #32 at `67006a9`. The current branch adds the PILOT-10 technical usability and accessibility controls. The controlled-pilot release gate is not yet satisfied: Auth0-hosted identity evidence, full-surface isolation, hosted deployment/secrets/recovery/operations evidence, remaining resource-safety evidence, protected usability evidence, and a signed operator rehearsal remain.
+Phase 4A, evidence export, OIDC/Auth0 integration, resource safety, operations, deployment/recovery, supply-chain preflight, performance, and usability technical evidence are merged with protected evidence through PR #33 at `52ee56f`. The controlled-pilot release gate is not yet satisfied: Auth0-hosted identity evidence, full-surface isolation, hosted deployment/secrets/recovery/operations evidence, remaining resource-safety evidence, and a signed operator rehearsal remain.

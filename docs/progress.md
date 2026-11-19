@@ -4,7 +4,7 @@
 
 PR #32 passed all five protected checks and merged the performance mechanism as `67006a9`. Main run `44353040583` passed on a four-CPU GitHub runner with 30 acknowledgement samples at 8.199 ms P95 and three deterministic 10,000-event replays in 4.488–4.790 seconds. Its raw artifact is retained until 2027-02-16, so PILOT-09 is closed.
 
-Branch `codex/pilot-usability-acceptance` adds opaque tenant-scoped audit keyset pagination, visible multi-page audit evidence, focused failure and result states, explicit retry actions, visible keyboard focus, mobile identity access, automated axe checks, and a retained main-only browser evidence workflow. Local Chromium validation passes both allow/block workflows, the serious/critical accessibility scan, and the 390-by-844 keyboard/mobile check. PILOT-10 still requires protected/main artifacts and a signed operator rehearsal; no signature or observation has been invented.
+PR #33 added opaque tenant-scoped audit keyset pagination, visible multi-page audit evidence, focused failure and result states, explicit retry actions, visible keyboard focus, mobile identity access, automated axe checks, and a retained main-only browser evidence workflow. All five protected checks passed in run `44443944501`; main run `44444505199` passed and retained artifact `14493046072` until 2027-02-17. PILOT-10 repository technical evidence is complete, but its signed operator rehearsal remains pending; no signature or observation has been invented.
 
 ## Update — 2026-11-18, performance evidence foundation
 
@@ -38,11 +38,11 @@ PILOT-01 also remains open: the Auth0 tenant/application/API and namespaced tena
 
 **As of:** 2026-11-19
 
-**Baseline:** `main` at `67006a9`; usability work on `codex/pilot-usability-acceptance`
+**Baseline:** `main` at `52ee56f`; usability technical evidence merged through PR #33
 
 **Milestone:** Controlled-pilot readiness implementation
 
-**Overall:** Tenant authorization, evidence export, OIDC/Auth0 integration, resource safety, operations, deployment/recovery, supply-chain preflight, and performance evidence are merged with successful protected evidence. Usability/accessibility technical evidence is under development. RuleTwin is suitable for a synthetic local demonstration. It is not approved for an externally hosted pilot or real data.
+**Overall:** Tenant authorization, evidence export, OIDC/Auth0 integration, resource safety, operations, deployment/recovery, supply-chain preflight, performance, and usability/accessibility technical evidence are merged with successful protected evidence. RuleTwin is suitable for a synthetic local demonstration. It is not approved for an externally hosted pilot or real data.
 
 ## Completed evidence
 
@@ -74,7 +74,7 @@ The approved implementation baseline is [`docs/pilot-readiness-plan.md`](pilot-r
 1. Complete Auth0-hosted login/logout, invited identity, invalid-token, and rotation evidence.
 2. Complete sustained saturation, timeout/recovery, and reference-profile evidence for PILOT-06.
 3. Deploy the reviewed immutable pilot topology and capture provider secret-store, HTTPS, log-redaction, scheduled-backup, restore, rollback, log, and alert-delivery evidence.
-4. Complete security, isolation, accessibility technical evidence, and signed operator acceptance. Supply-chain and performance gates are closed.
+4. Complete security, isolation, and signed operator acceptance. Supply-chain, performance, and usability technical evidence are complete.
 5. Publish immutable `v0.4.0-pilot.1` artifacts only after every gate passes.
 
 ## Owner decisions required
