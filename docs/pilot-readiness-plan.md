@@ -1,6 +1,6 @@
 # Controlled Pilot Readiness Plan
 **Status:** Approved implementation baseline  
-**Baseline:** `main` at `db4e3dd`
+**Baseline:** `main` at `fbf297e`
 **Pilot data:** Synthetic data only  
 **Deployment audience:** Invited users only until every exit criterion passes
 ## Objective
@@ -75,6 +75,8 @@ The pilot release is blocked unless:
 
 ## Owner decisions required
 
+Use [`operations/pilot-owner-coordination.md`](operations/pilot-owner-coordination.md) and the machine-checkable [`deploy/pilot/owner-decisions.example.json`](../deploy/pilot/owner-decisions.example.json) template. Keep the completed record outside Git and validate it with `scripts/pilot.py validate-owner-decisions`.
+
 | Decision | Status |
 |---|---|
 | Hosting provider and budget | Required |
@@ -88,4 +90,4 @@ The pilot release is blocked unless:
 
 ## Current assessment
 
-Phase 4A, evidence export, OIDC/Auth0 integration, resource safety, operations, deployment/recovery, supply-chain preflight, performance, usability technical evidence, and current-surface isolation are merged with protected evidence through PR #36 at `db4e3dd`. PILOT-02, PILOT-06, PILOT-08, and PILOT-09 are closed at repository level. The controlled-pilot release gate is not yet satisfied: Auth0-hosted identity evidence, hosted deployment/secrets/recovery/operations evidence, and a signed operator rehearsal remain.
+Phase 4A, evidence export, OIDC/Auth0 integration, resource safety, operations, deployment/recovery, supply-chain preflight, performance, usability technical evidence, and current-surface isolation are merged with protected evidence through PR #37 at `ac6f6d8`; dependency maintenance through `fbf297e` leaves the same gate assessment unchanged. PILOT-02, PILOT-06, PILOT-08, and PILOT-09 are closed at repository level. The controlled-pilot release gate is not yet satisfied: Auth0-hosted identity evidence, hosted deployment/secrets/recovery/operations evidence, and a signed operator rehearsal remain.

@@ -40,6 +40,14 @@ PUBLIC_KEYS = (
     "RULETWIN_OIDC_JWKS_URL",
 )
 
+REQUIRED_PILOT_ROLES = {
+    "analyst",
+    "qa_reviewer",
+    "release_approver",
+    "auditor",
+}
+PLACEHOLDER_VALUES = {"", "pending", "required", "tbd", "todo", "unknown"}
+
 FINGERPRINT_SQL = """
 SELECT jsonb_build_object(
   'migration', (SELECT version_num FROM alembic_version LIMIT 1),
@@ -117,6 +125,119 @@ def validate_release_environment(values: dict[str, str]) -> list[str]:
             errors.append(f"{key} does not reference a readable file")
         elif path.stat().st_size == 0:
             errors.append(f"{key} references an empty file")
+    return errors
+
+
+def load_owner_decisions(path: Path) -> dict[str, Any]:
+    decisions = json.loads(path.read_text(encoding="utf-8-sig"))
+    if not isinstance(decisions, dict):
+        raise ValueError("owner decisions must be a JSON object")
+    return decisions
+
+
+def _decision_value(decisions: dict[str, Any], path: str) -> Any:
+    value: Any = decisions
+    for part in path.split("."):
+        if not isinstance(value, dict) or part not in value:
+            return None
+        value = value[part]
+    return value
+
+
+def _is_decided(value: Any) -> bool:
+    if not isinstance(value, str):
+        return False
+    return value.strip().lower() not in PLACEHOLDER_VALUES
+
+
+def validate_owner_decisions(decisions: dict[str, Any]) -> list[str]:
+    """Validate non-secret owner inputs required before a hosted pilot can start."""
+    errors: list[str] = []
+    if decisions.get("schema_version") != 1:
+        errors.append("schema_version must be 1")
+
+    required_strings = (
+        "hosting.provider",
+        "hosting.region",
+        "hosting.budget_owner",
+        "hosting.operator",
+        "domain.hostname",
+        "domain.tls_owner",
+        "identity.provider",
+        "identity.tenant",
+        "identity.client_id",
+        "identity.api_audience",
+        "identity.tenant_claim",
+        "identity.owner",
+        "secrets.provider",
+        "secrets.access_identity",
+        "secrets.owner",
+        "recovery.backup_storage",
+        "recovery.owner",
+        "operations.support_window",
+        "operations.alert_receiver",
+        "operations.incident_owner",
+        "acceptance.operator",
+        "acceptance.scheduled_at",
+    )
+    for path in required_strings:
+        if not _is_decided(_decision_value(decisions, path)):
+            errors.append(f"{path} requires an owner decision")
+
+    if _decision_value(decisions, "scope.data_classification") != "synthetic-only":
+        errors.append("scope.data_classification must be synthetic-only")
+    if _decision_value(decisions, "scope.access_model") != "invitation-only":
+        errors.append("scope.access_model must be invitation-only")
+    if _decision_value(decisions, "scope.hosted_visibility") not in {"private", "unlisted"}:
+        errors.append("scope.hosted_visibility must be private or unlisted")
+    if _decision_value(decisions, "identity.provider") != "Auth0":
+        errors.append("identity.provider must remain Auth0 for the implemented pilot integration")
+
+    hostname = _decision_value(decisions, "domain.hostname")
+    if _is_decided(hostname) and "://" in hostname:
+        errors.append("domain.hostname must be a hostname, not a URL")
+    for path in ("identity.api_audience", "identity.tenant_claim"):
+        value = _decision_value(decisions, path)
+        if _is_decided(value) and not value.startswith("https://"):
+            errors.append(f"{path} must use an HTTPS namespace")
+
+    for path in ("recovery.retention_days", "recovery.rpo_minutes", "recovery.rto_minutes"):
+        value = _decision_value(decisions, path)
+        if not isinstance(value, int) or isinstance(value, bool) or value <= 0:
+            errors.append(f"{path} must be a positive integer")
+
+    identities = _decision_value(decisions, "identity.invited_identities")
+    if not isinstance(identities, list) or not identities:
+        errors.append("identity.invited_identities must contain the invitation-only pilot users")
+    else:
+        subjects: set[str] = set()
+        roles: set[str] = set()
+        tenants: set[str] = set()
+        for index, identity in enumerate(identities):
+            if not isinstance(identity, dict):
+                errors.append(f"identity.invited_identities[{index}] must be an object")
+                continue
+            for field in ("subject", "tenant", "role"):
+                if not _is_decided(identity.get(field)):
+                    errors.append(f"identity.invited_identities[{index}].{field} requires a value")
+            subject = identity.get("subject")
+            role = identity.get("role")
+            tenant = identity.get("tenant")
+            if isinstance(subject, str) and subject:
+                if subject in subjects:
+                    errors.append(f"identity subject {subject!r} is duplicated")
+                subjects.add(subject)
+            if isinstance(role, str):
+                roles.add(role)
+            if isinstance(tenant, str) and tenant:
+                tenants.add(tenant)
+        missing_roles = sorted(REQUIRED_PILOT_ROLES - roles)
+        if missing_roles:
+            errors.append(
+                "identity.invited_identities is missing roles: " + ", ".join(missing_roles)
+            )
+        if len(tenants) < 2:
+            errors.append("identity.invited_identities must cover at least two synthetic tenants")
     return errors
 
 
@@ -348,6 +469,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--user", default="ruletwin_admin")
     subparsers = parser.add_subparsers(dest="command", required=True)
     subparsers.add_parser("validate-config")
+    decisions = subparsers.add_parser("validate-owner-decisions")
+    decisions.add_argument("--decisions-file", type=Path, required=True)
     backup = subparsers.add_parser("backup")
     backup.add_argument("--output", type=Path, default=Path("artifacts/backups"))
     restore = subparsers.add_parser("restore-rehearsal")
@@ -382,6 +505,20 @@ def main() -> int:
             return 1
         runtime.compose("config", "--quiet")
         print("Pilot configuration is valid; no secret values were displayed.")
+        return 0
+    if args.command == "validate-owner-decisions":
+        decisions_path = (repository / args.decisions_file).resolve()
+        try:
+            decisions = load_owner_decisions(decisions_path)
+        except (OSError, json.JSONDecodeError, ValueError) as error:
+            print(f"ERROR: {error}", file=sys.stderr)
+            return 1
+        errors = validate_owner_decisions(decisions)
+        if errors:
+            for error in errors:
+                print(f"ERROR: {error}", file=sys.stderr)
+            return 1
+        print("Pilot owner decisions are complete; no secret values were displayed.")
         return 0
     if args.command == "backup":
         backup, manifest = create_backup(runtime, (repository / args.output).resolve())

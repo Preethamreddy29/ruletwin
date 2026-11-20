@@ -1,5 +1,11 @@
 # Progress and Status
 
+## Update — 2026-11-20, external pilot coordination gate
+
+The pilot foundation already contains the hosted deployment, Auth0, secret-file, recovery, monitoring, and acceptance mechanisms, but the remaining account-owned decisions were represented only as prose. The current increment adds a non-secret owner-decision template, a fail-closed validator, and an exact coordination guide. The validator requires synthetic-only invitation access, named hosting/domain/identity/secret/recovery/operations/acceptance owners, both fictional tenants, all four pilot roles, distinct invited subjects, positive retention/RPO/RTO values, and HTTPS identity namespaces. It does not store secrets and does not claim external services are configured.
+
+Focused validation passes with four pilot tests. The complete non-integration Python suite passes with 96 tests and 81.13% coverage; OpenAPI validation reports 13 paths and 13 operations; secret scanning and strict typing across 28 source files pass. Protected pull-request evidence remains required before merge. External gates remain open until the owner supplies the decisions and the hosted/human evidence listed in the coordination guide.
+
 ## Update — 2026-11-19, resource-safety evidence closed
 
 PR #36 adds a repeatable container-level evidence runner and a retained main-only workflow. The named local `sunny-windows-docker-resource-v1` run admitted 5 simulations at the configured limit, rejected the next request with `queue-capacity-exceeded`, preserved the original identifier for an idempotent retry, and drained all accepted work in 6.614 seconds with one deterministic checksum. A forced one-second worker timeout was recorded as `TimeoutError`; the same outbox item recovered and completed on attempt 2. The clean runner also discovered a newly disclosed NGINX vulnerability set; the runtime was updated to the patched 1.30.7 image before all five protected checks passed in run `44546320237`. PR #36 was squash-merged as `db4e3dd`. Main run `44547402942` passed and retained artifact `14540613851` until 2027-02-17. PILOT-06 is closed.
@@ -46,9 +52,9 @@ The resource-safety foundation adds request-body, replay-dataset, per-tenant que
 
 PILOT-01 also remains open: the Auth0 tenant/application/API and namespaced tenant claim require owner configuration, distinct invited subjects must be provisioned, and deployed login/logout, invalid-token, and provider key-rotation evidence must pass.
 
-**As of:** 2026-11-19
+**As of:** 2026-11-20
 
-**Baseline:** `main` at `db4e3dd`; resource-safety evidence merged through PR #36
+**Baseline:** `main` at `fbf297e`; resource-safety closure merged through PR #37
 
 **Milestone:** Controlled-pilot readiness implementation
 

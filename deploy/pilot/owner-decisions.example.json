@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "scope": {
+    "data_classification": "synthetic-only",
+    "access_model": "invitation-only",
+    "hosted_visibility": "private"
+  },
+  "hosting": {
+    "provider": "",
+    "region": "",
+    "budget_owner": "",
+    "operator": ""
+  },
+  "domain": {
+    "hostname": "",
+    "tls_owner": ""
+  },
+  "identity": {
+    "provider": "Auth0",
+    "tenant": "",
+    "client_id": "",
+    "api_audience": "",
+    "tenant_claim": "",
+    "owner": "",
+    "invited_identities": [
+      {"subject": "", "tenant": "NovaBill", "role": "analyst"},
+      {"subject": "", "tenant": "NovaBill", "role": "qa_reviewer"},
+      {"subject": "", "tenant": "Brightline", "role": "release_approver"},
+      {"subject": "", "tenant": "Brightline", "role": "auditor"}
+    ]
+  },
+  "secrets": {
+    "provider": "",
+    "access_identity": "",
+    "owner": ""
+  },
+  "recovery": {
+    "backup_storage": "",
+    "retention_days": 0,
+    "rpo_minutes": 0,
+    "rto_minutes": 0,
+    "owner": ""
+  },
+  "operations": {
+    "support_window": "",
+    "alert_receiver": "",
+    "incident_owner": ""
+  },
+  "acceptance": {
+    "operator": "",
+    "scheduled_at": ""
+  }
+}

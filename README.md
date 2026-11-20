@@ -4,6 +4,8 @@ RuleTwin is a deterministic, tenant-aware change-impact simulator for proposed b
 
 > **Current state:** The controlled-pilot foundation includes deterministic simulation and evidence export, tenant-aware authorization, OIDC verification, Auth0-compatible authorization-code/PKCE browser flows, bounded resource controls, operations/alerting, deployment/recovery automation, and supply-chain evidence generation. RuleTwin is suitable for synthetic local demonstrations; it is not yet approved for an externally hosted pilot or production use.
 
+The remaining hosted-pilot decisions and account-owned actions are organized in the [pilot owner coordination record](docs/operations/pilot-owner-coordination.md). Its validator fails closed when hosting, identity, recovery, operations, or human-acceptance ownership is incomplete, without storing or displaying secrets.
+
 ## Product boundary
 
 RuleTwin is not a billing engine, no-code rules platform, payment system, feature-flag service, or AI rule generator. It uses fictional NovaBill and Brightline scenarios with synthetic data only.
