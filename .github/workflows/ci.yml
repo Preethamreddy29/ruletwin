@@ -296,7 +296,7 @@ jobs:
           --output artifacts/performance/pr-smoke.json
       - name: Upload performance smoke evidence
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ruletwin-performance-smoke-${{ github.sha }}
           path: artifacts/performance
@@ -310,7 +310,7 @@ jobs:
           --output artifacts/resource-safety/pr-smoke.json
       - name: Upload resource-safety evidence
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ruletwin-resource-safety-${{ github.sha }}
           path: artifacts/resource-safety
@@ -318,7 +318,7 @@ jobs:
           retention-days: 30
       - name: Upload supply-chain evidence
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ruletwin-supply-chain-${{ github.sha }}
           path: artifacts/release

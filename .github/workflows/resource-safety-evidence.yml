@@ -42,7 +42,7 @@ jobs:
           --output artifacts/resource-safety/report.json
       - name: Upload immutable resource-safety evidence
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ruletwin-resource-safety-${{ github.sha }}
           path: artifacts/resource-safety
