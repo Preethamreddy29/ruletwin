@@ -113,7 +113,7 @@ jobs:
           skip-setup-trivy: true
       - name: Upload immutable candidate evidence
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ruletwin-${{ inputs.version }}-${{ github.sha }}
           path: artifacts/release

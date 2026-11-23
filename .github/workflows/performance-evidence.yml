@@ -61,7 +61,7 @@ jobs:
           --output artifacts/performance/report.json
       - name: Upload immutable performance evidence
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ruletwin-performance-${{ github.sha }}
           path: artifacts/performance

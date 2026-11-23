@@ -44,7 +44,7 @@ jobs:
             > artifacts/usability/metadata.json
       - name: Upload immutable usability evidence
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ruletwin-usability-${{ github.sha }}
           path: artifacts/usability
